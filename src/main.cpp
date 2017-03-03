@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <fcntl.h>
 #include <fstream>
 #include <getopt.h>
 #include <iostream>
@@ -6,14 +7,19 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/signal.h>
+#include <sys/stat.h>
 #include <sys/types.h>
-#include "daemon.h"
 
 using namespace std;
 
-bool createdae = true;
+bool daemonmode = true;
 bool daerunning;
 int daepid;
+
+int maind();
+void child_handler(int);
+void signal_handler(int);
+
 
 bool DetectDaemon()
 {
@@ -36,56 +42,6 @@ bool DetectDaemon()
         daerunning = false;
     close(lfp);
     return daerunning;
-}
-
-inline int CreateDaemonSec()
-{
-    if(createdae)setsid();
-    ofstream pidf;
-    pidf.open("/tmp/lxtester.pid");
-    if(!pidf){
-        cerr<<"Fail to open pid file:"<<endl;
-        return 2;
-    }
-    pid_t p = fork();
-    switch(p)
-    {
-        case -1:
-            cerr<<"Fork Error."<<endl;
-            return -1;
-        case 0:
-            return maind();
-            break;
-        default:
-            pidf<<p<<endl;
-            cout<<"Daemon Process ID:"<<p<<endl;
-            break;
-    }
-    pidf.close();
-    return 0;
-}
-int CreateDaemon()
-{
-    int status;
-        pid_t p = fork();
-        switch(p)
-        {
-            case -1:
-                cerr<<"Fork Error."<<endl;
-                return -1;
-            case 0:
-                CreateDaemonSec();
-                break;
-            default:
-                waitpid(p,&status,0);
-                if(WIFSIGNALED(status))
-                {
-                    cerr<<"Creating daemon failed"<<endl;
-                    return status;
-                }
-                break;
-        }
-        return 0;
 }
 
 const char optstring[] = "DdhrRs";
@@ -128,12 +84,12 @@ int main(int argc,char* argv[])
             case 'd':
                 if(ty)usage(true);
                 ty = DAE_START;
-                createdae = true;
+                daemonmode = true;
                 break;
             case 'D':
                 if(ty)usage(true);
                 ty = DAE_START;
-                createdae = false;
+                daemonmode = false;
                 break;
             case 'r':
                 if(ty)usage(true);
@@ -172,10 +128,9 @@ int main(int argc,char* argv[])
                 cerr<<"There is another daemon running."<<endl;
                 return 1;
             }
-            if(createdae)
-                return CreateDaemon();
-            else
-                return maind();
+            if(daemonmode)
+                daemon(1,0);
+            return maind();
         case DAE_STOP:
             if(!daerunning)
             {
@@ -203,7 +158,106 @@ int main(int argc,char* argv[])
             {
                 sleep(1);
             }
-            return CreateDaemon();
+            daemon(1,0);
+            return maind();
+    }
+}
+
+bool stopping = 0;
+mode_t newfile = S_IREAD | S_IWRITE | S_IRGRP | S_IROTH;
+
+int maind()
+{
+    umask(0022);
+    if(daemonmode)
+    {
+        for(int i = getdtablesize();i >= 0;--i)
+            close(i);
+        open("/dev/null",O_RDWR);/* open stdin */
+        open("/tmp/lxtester.out.log", O_RDWR|O_CREAT|O_APPEND, newfile);/* stdout */
+        open("/tmp/lxtester.err.log", O_RDWR|O_CREAT|O_APPEND, newfile);/* stderr */
+    }
+    int lfp=open("/tmp/lxtester.lock",O_RDWR|O_CREAT|O_TRUNC,0640);
+	if (lfp<0) return 1;
+	if (lockf(lfp,F_TLOCK,0) < 0)
+    {
+        cerr<<"Can't lock \"/tmp/lxtester .lock\""<<endl;
+        cerr<<"Maybe another process is running."<<endl;
+        return 0;
+    }
+    ofstream pidf;
+    pidf.open("/tmp/lxtester.pid");
+    if(!pidf){
+        cerr<<"Fail to open pid file:"<<endl;
+        return 2;
+    }
+    pidf<<getpid()<<endl;
+    pidf.close();
+
+    signal(SIGTSTP,SIG_IGN);
+	signal(SIGTTOU,SIG_IGN);
+	signal(SIGTTIN,SIG_IGN);
+	signal(SIGCHLD,child_handler);
+	signal(SIGHUP,signal_handler);
+	signal(SIGINT,signal_handler);
+	signal(SIGTERM,signal_handler);
+	cout<<"Daemon Started"<<endl;
+	//JudgeSocket js("host", 1234, "token");
+    while(!stopping)
+    {
+        /*
+        Submission sub = js.checkJobs();
+        if(sub.id != -1)
+        {
+            switch(sub.job)
+            {
+            case J_Verdict:
+                break;
+            case J_Test:
+
+                break;
+            default:
+                continue;
+            }
+        }
+        */
+        sleep(1);
+
+    }
+    cout<<"Server stopped."<<endl;
+    return 0;
+}
+
+void child_handler(int sig)
+{
+    while(true)
+    {
+        int chldsta;
+        pid_t chpid = waitpid(-1, &chldsta, WNOHANG);
+        if(chpid == 0) return;
+
+    }
+}
+
+
+void signal_handler(int sig)
+{
+    switch(sig) {
+        case SIGHUP:
+            cout<<"Reloading lxtester server..."<<endl;
+            cout<<"Server reloaded."<<endl;
+            break;
+        case SIGINT:
+            if(!daemonmode)
+            {
+                cout<<"Stopping lxtester server..."<<endl;
+                stopping = 1;
+            }
+            break;
+        case SIGTERM:
+            cout<<"Stopping lxtester server..."<<endl;
+            stopping = 1;
             break;
     }
+    return;
 }
