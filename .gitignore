@@ -1,4 +1,6 @@
+.kdev4/
 bin/
+build/
 obj/
 *.layout
 

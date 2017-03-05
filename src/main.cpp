@@ -164,7 +164,7 @@ int main(int argc,char* argv[])
 }
 
 bool stopping = 0;
-mode_t newfile = S_IREAD | S_IWRITE | S_IRGRP | S_IROTH;
+mode_t newfile = 0644;
 
 int maind()
 {

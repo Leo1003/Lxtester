@@ -32,7 +32,6 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="src/daemon.h" />
 		<Unit filename="src/main.cpp" />
 		<Extensions>
 			<code_completion />
