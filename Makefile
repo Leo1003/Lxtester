@@ -2,17 +2,15 @@ CC = gcc
 CXX = g++
 CXXFLAGS = -std=c++11
 SRC = ./src
+OBJ = ./build/main.o ./build/runner.o
 
 build: mkdir ./bin/lxtester
 
-./bin/lxtester: ./build/main.o ./build/runner.o
-	$(CXX) $(CXXFLAGS) -o ./bin/lxtester ./build/main.o
+./bin/lxtester: $(OBJ)
+	$(CXX) $(CXXFLAGS) -o ./bin/lxtester $(OBJ) 
 
-./build/main.o: ./src/main.cpp
-	$(CXX) $(CXXFLAGS) -c -o ./build/main.o ./src/main.cpp
-
-./build/runner.o: ./src/runner.cpp ./src/runner.h
-	$(CXX) $(CXXFLAGS) -c -o ./build/runner.o ./src/runner.cpp
+./build/main.o: 
+./build/runner.o:
 
 .PHONY: mkdir
 mkdir:
@@ -23,3 +21,6 @@ mkdir:
 clean:
 	-rm -rf ./build/*
 	-rm -f ./bin/lxtester
+
+./build/%.o : ./src/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
