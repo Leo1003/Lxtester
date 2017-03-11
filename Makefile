@@ -3,7 +3,7 @@ CXX = g++
 CXXFLAGS = -std=c++11
 SRC = ./src
 
-build: | ./bin/lxtester ./bin ./build
+build: mkdir ./bin/lxtester
 
 ./bin/lxtester: ./build/main.o ./build/runner.o
 	$(CXX) $(CXXFLAGS) -o ./bin/lxtester ./build/main.o
@@ -13,11 +13,10 @@ build: | ./bin/lxtester ./bin ./build
 
 ./build/runner.o: ./src/runner.cpp ./src/runner.h
 	$(CXX) $(CXXFLAGS) -c -o ./build/runner.o ./src/runner.cpp
-	
-./bin:
-	mkdir -p ./bin
 
-./build:
+.PHONY: mkdir
+mkdir:
+	mkdir -p ./bin
 	mkdir -p ./build
 
 .PHONY: clean
