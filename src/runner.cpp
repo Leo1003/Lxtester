@@ -22,6 +22,11 @@ int parsemeta(string metafile, meta &metas)
         metas.max_rss = (m["max-rss"] != "" ? stoll(m["max-rss"]) : 0);
         metas.time = (m["time"] != "" ? stod(m["time"]) * 1000 : -1);
         metas.time_wall = (m["time-wall"] != "" ? stod(m["time-wall"]) * 1000 : -1);
+        metas.exitcode = (m["exitcode"] != "" ? stoi(m["exitcode"]) : 0);
+        metas.exitsig = (m["exitsig"] != "" ? stoi(m["exitsig"]) : 0);
+        metas.isKilled = (m["killed"] != "" ? stoi(m["killed"]) : 0);
+        metas.message = m["message"];
+        metas.status = m["status"];
     }
     catch(exception ex)
     {
