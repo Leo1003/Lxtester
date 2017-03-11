@@ -1,5 +1,58 @@
 #include "runner.h"
+#define PB push_back
 using namespace std;
+
+pid_t boxExec(string cmd, exec_opt option)
+{
+    vector<string> args;
+    args.PB("./isolate"); //TODO:fix relative path
+    args.PB("--run");
+    args.PB("--cg");
+    args.PB("--box-id=" + to_string(option.id));
+    double timeout = option.time / 1000.0;
+    args.PB("--time=" + to_string(timeout));
+    args.PB("--wall-time=" + to_string(timeout));
+    args.PB("--mem=" + to_string(option.mem));
+    args.PB("--process=" + to_string(option.processes));
+    args.PB("--stack=" + to_string(option.stack));
+    args.PB("--fsize=" + to_string(option.fsize));
+    args.PB("--file-limit=" + to_string(option.files));
+    args.PB("--stdin=" + option.std_in);
+    args.PB("--stdout=stdout.log");
+    args.PB("--stderr=stderr.log");
+    args.PB("--stdin=" + option.metafile);
+    args.PB("--");
+    
+    //split cmd string into vector<string>
+    stringstream ss(cmd);
+    string tmp;
+    while(ss)
+    {
+        ss >> tmp;
+        args.PB(tmp);
+    }
+    
+    char** argp;
+    
+    parseVecstr(args, argp);
+    
+    pid_t pid = fork();
+    if(pid == 0)
+    {
+        //child process
+        execvp(argp[0], argp);
+    }
+    else if(pid > 0)
+    {
+        //main process
+    }
+    else
+    {
+        //failed
+    }
+    return pid;
+}
+
 
 int parsemeta(string metafile, meta &metas)
 {
@@ -16,15 +69,15 @@ int parsemeta(string metafile, meta &metas)
     }
     try
     {
-        metas.cg_mem = (m["cg-mem"] != "" ? stoll(m["cg-mem"]) : 0);
-        metas.csw_forced = (m["csw-forced"] != "" ? stoll(m["csw-forced"]) : 0);
-        metas.csw_voluntary = (m["csw-voluntary"] != "" ? stoll(m["csw-voluntary"]) : 0);
-        metas.max_rss = (m["max-rss"] != "" ? stoll(m["max-rss"]) : 0);
-        metas.time = (m["time"] != "" ? stod(m["time"]) * 1000 : -1);
-        metas.time_wall = (m["time-wall"] != "" ? stod(m["time-wall"]) * 1000 : -1);
-        metas.exitcode = (m["exitcode"] != "" ? stoi(m["exitcode"]) : 0);
-        metas.exitsig = (m["exitsig"] != "" ? stoi(m["exitsig"]) : 0);
-        metas.isKilled = (m["killed"] != "" ? stoi(m["killed"]) : 0);
+        metas.cg_mem = tryParsell(m["cg-mem"]);
+        metas.csw_forced = tryParsell(m["csw-forced"]);
+        metas.csw_voluntary = tryParsell(m["csw-voluntary"]);
+        metas.max_rss = tryParsell(m["max-rss"]);
+        metas.time = tryParsell(m["time"], -1);
+        metas.time_wall = tryParsell(m["time-wall"], -1);
+        metas.exitcode = tryParse(m["exitcode"]);
+        metas.exitsig = tryParse(m["exitsig"]);
+        metas.isKilled = tryParse(m["killed"]);
         metas.message = m["message"];
         metas.status = m["status"];
     }

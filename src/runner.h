@@ -5,6 +5,12 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <sys/signal.h>
+#include "utils.h"
 
 struct result
 {
@@ -15,7 +21,7 @@ struct result
 
 struct exec_opt
 {
-    int time, mem, fsize, files, processes, stack;
+    int id, time, mem, fsize, files, processes, stack;
     std::string std_in, metafile;
 };
 
@@ -27,7 +33,9 @@ struct meta
     std::string status, message;
 };
 
-int exec(std::string cmd, exec_opt option);
+int boxInit(exec_opt option);
+pid_t boxExec(std::string cmd, exec_opt option);
+int boxDel(exec_opt option);
 
 int parsemeta(std::string metafile, meta &metas);
 
