@@ -22,7 +22,8 @@ struct result
 
 struct exec_opt
 {
-    int id, time, mem, fsize, files, processes, stack;
+    long long time, mem;
+    int id, fsize, files, processes, stack;
     std::string std_in, metafile;
 };
 
@@ -39,6 +40,7 @@ pid_t boxExec(std::string cmd, exec_opt option);
 int boxDel(exec_opt option);
 
 int parsemeta(std::string metafile, meta &metas);
+result genResult(exec_opt option, meta metas);
 
 int advFork(char** argp, pid_t& pid, bool wait = true);
 #endif // RUNNER_H

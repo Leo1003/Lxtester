@@ -142,3 +142,45 @@ int parsemeta(string metafile, meta &metas)
     }
     return 0;
 }
+
+result genResult(exec_opt option, meta metas)
+{
+    result res;
+    res.time = metas.time;
+    res.mem = metas.max_rss;
+    res.exitcode = metas.exitcode;
+    res.signal = metas.exitsig;
+    res.isKilled = metas.isKilled;
+    try
+    {
+        ifstream outf("/tmp/box/" + to_string(option.id) + "/box/stdout.log");
+        string s;
+        while(getline(outf, s))
+        {
+            res.std_out += s + "\n";
+        }
+        outf.close();
+    }
+    catch(exception ex)
+    {
+        log("Fail to open output", LVER);
+        log(ex.what());
+    }
+    try
+    {
+        ifstream errf("/tmp/box/" + to_string(option.id) + "/box/stderr.log");
+        string s;
+        while(getline(errf, s))
+        {
+            res.std_err += s + "\n";
+        }
+        errf.close();
+    }
+    catch(exception ex)
+    {
+        log("Fail to open stderr", LVER);
+        log(ex.what());
+    }
+    return res;
+}
+
