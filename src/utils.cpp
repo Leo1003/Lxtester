@@ -1,10 +1,9 @@
 #include "utils.h"
 using namespace std;
 
-void warn(std::string mes, bool showlv)
+void log(string mes, string lvpre)
 {
-    string lv = (showlv ? "[WARN]" : "      ");
-    cerr << lv << mes << endl;
+    cerr << lvpre << mes << endl;
 }
 
 
@@ -18,8 +17,8 @@ int tryParse(string str, int def)
     }
     catch(invalid_argument ex)
     {
-        warn("Parsing string error:");
-        warn(ex.what(), false);
+        log("Parsing string error:", LVWA);
+        log(ex.what());
         return def;
     }
 }
@@ -34,13 +33,13 @@ long long tryParsell(string str, long long def)
     }
     catch(invalid_argument ex)
     {
-        warn("Parsing string error:");
-        warn(ex.what(), false);
+        log("Parsing string error:", LVWA);
+        log(ex.what());
         return def;
     }
 }
 
-void parseVecstr(std::vector<std::string> vec, char *** output)
+void parseVecstr(vector<string> vec, char *** output)
 {
     vector<char *> v(vec.size() + 1);    // one extra for the null
     for (size_t i = 0; i < vec.size(); i++)

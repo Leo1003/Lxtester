@@ -4,7 +4,15 @@
 #include <string>
 #include <vector>
 
-void warn(std::string mes, bool showlv = true);
+//Define log level prefix
+#define LVFA "[FATAL]"
+#define LVER "[ERROR]"
+#define LVWA "[WARN] "
+#define LVIN "[INFO] "
+#define LVDE "[DEBUG]"
+#define LVNU "       "
+
+void log(std::string mes, std::string lvpre = LVNU);
 
 int tryParse(std::string str, int def = 0);
 long long tryParsell(std::string str, long long def = 0);
