@@ -24,7 +24,7 @@ int tryParse(string str, int def)
     }
 }
 
-long long tryParsell(string str, int def)
+long long tryParsell(string str, long long def)
 {
     try
     {
@@ -40,12 +40,12 @@ long long tryParsell(string str, int def)
     }
 }
 
-void parseVecstr(std::vector<std::string> vec, char ** output)
+void parseVecstr(std::vector<std::string> vec, char *** output)
 {
     vector<char *> v(vec.size() + 1);    // one extra for the null
     for (size_t i = 0; i < vec.size(); i++)
     {
         v[i] = &vec[i][0];
     }
-    output = v.data();
+    *output = v.data();
 }

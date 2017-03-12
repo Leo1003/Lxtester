@@ -2,6 +2,26 @@
 #define PB push_back
 using namespace std;
 
+int boxInit(exec_opt option)
+{
+    vector<string> args;
+    args.PB("./isolate");
+    args.PB("--init");
+    args.PB("--cg");
+    args.PB("--box-id=" + to_string(option.id));
+
+    char** argp;
+    parseVecstr(args, &argp);
+
+    pid_t pid;
+    int status = advFork(argp, pid);
+    
+    if(WIFEXITED(status))
+        return WEXITSTATUS(status);
+    else
+        return 255;
+}
+
 pid_t boxExec(string cmd, exec_opt option)
 {
     vector<string> args;
@@ -33,26 +53,59 @@ pid_t boxExec(string cmd, exec_opt option)
     }
     
     char** argp;
+    parseVecstr(args, &argp);
     
-    parseVecstr(args, argp);
+    pid_t pid;
+    advFork(argp, pid, false);
+
+    return pid;
+}
+
+int boxDel(exec_opt option)
+{
+    vector<string> args;
+    args.PB("./isolate");
+    args.PB("--cleanup");
+    args.PB("--cg");
+    args.PB("--box-id=" + to_string(option.id));
+
+    char** argp;
+    parseVecstr(args, &argp);
+
+    pid_t pid;
+    int status = advFork(argp, pid);
     
-    pid_t pid = fork();
+    if(WIFEXITED(status))
+        return WEXITSTATUS(status);
+    else
+        return 255;
+}
+
+int advFork(char** argp, pid_t& pid, bool wait)
+{
+    int status = 0;
+    pid = fork();
     if(pid == 0)
     {
         //child process
         execvp(argp[0], argp);
+        exit(127);
     }
     else if(pid > 0)
     {
         //main process
+        if(wait)
+        {
+            waitpid(pid, &status, 0);
+        }
     }
     else
     {
         //failed
+        status = -1;
     }
-    return pid;
+    return status;
 }
-
 
 int parsemeta(string metafile, meta &metas)
 {

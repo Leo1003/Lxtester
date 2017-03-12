@@ -1,5 +1,6 @@
 #ifndef RUNNER_H
 #define RUNNER_H
+#include <errno.h>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -39,4 +40,5 @@ int boxDel(exec_opt option);
 
 int parsemeta(std::string metafile, meta &metas);
 
+int advFork(char** argp, pid_t& pid, bool wait = true);
 #endif // RUNNER_H
