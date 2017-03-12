@@ -2,7 +2,9 @@
 #define UTILS_H
 #include <iostream>
 #include <string>
+#include <regex>
 #include <vector>
+#include <unistd.h>
 
 //Define log level prefix
 #define LVFA "[FATAL]"
@@ -13,6 +15,8 @@
 #define LVNU "       "
 
 void log(std::string mes, std::string lvpre = LVNU);
+std::string getSelfPath();
+std::string getWorkDir();
 
 int tryParse(std::string str, int def = 0);
 long long tryParsell(std::string str, long long def = 0);

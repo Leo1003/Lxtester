@@ -6,6 +6,28 @@ void log(string mes, string lvpre)
     cerr << lvpre << mes << endl;
 }
 
+string getSelfPath()
+{
+    char buf[5001];
+    readlink("/proc/self/exe", buf, 5000);
+    string out(buf);
+    return out;
+}
+
+string getWorkDir()
+{
+    string path = getSelfPath();
+    regex reg("^(.+\\/)lxtester$");
+    smatch sm;
+    if(regex_match(path, sm, reg))
+    {
+        //TODO:Do something
+    }
+    else
+    {
+        log("Can't match path", LVWA);
+    }
+}
 
 int tryParse(string str, int def)
 {
