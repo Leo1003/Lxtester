@@ -2,6 +2,7 @@
 #define UTILS_H
 #include <iostream>
 #include <string>
+#include <sys/stat.h>
 #include <regex>
 #include <vector>
 #include <unistd.h>

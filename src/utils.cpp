@@ -17,16 +17,33 @@ string getSelfPath()
 string getWorkDir()
 {
     string path = getSelfPath();
-    regex reg("^(.+\\/)lxtester$");
+    regex reg("\\/([^\\/]+)");
     smatch sm;
-    if(regex_match(path, sm, reg))
+    vector<string> dirlv;
+    while(regex_search(path, sm, reg))
     {
-        //TODO:Do something
+        dirlv.push_back(sm[1]);
+        path = sm.suffix().str();
     }
-    else
+    for(int i = dirlv.size() - 1; i >= 0; i--)
     {
-        log("Can't match path", LVWA);
+        dirlv.pop_back();
+        string dir;
+        stringstream ss;
+        for(int j = 0; j < dirlv.size(); j++)
+            ss << "/" << dirlv[j];
+        dir = ss.str();
+        ss << "/lxtester.cfg";
+        struct stat st;
+        if(stat(ss.str().c_str(), &st) != -1 || st.st_mode & S_IFREG)
+        {
+            log("Found config file: " + ss.str(), LVDE);
+            log("Set working directory: " + dir, LVDE);
+            return dir;
+        }
     }
+    log("Can't match path", LVER);
+    return "";
 }
 
 int tryParse(string str, int def)
