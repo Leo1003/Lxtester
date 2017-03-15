@@ -16,7 +16,7 @@
 struct result
 {
     std::string std_out, std_err;
-    int time, mem, exitcode, signal;
+    int time, mem, exitcode, signal, id;
     bool isKilled;
 };
 

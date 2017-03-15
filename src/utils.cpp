@@ -33,9 +33,9 @@ string getWorkDir()
         for(int j = 0; j < dirlv.size(); j++)
             ss << "/" << dirlv[j];
         dir = ss.str();
-        ss << "/lxtester.cfg";
+        ss << "/lxtester.conf";
         struct stat st;
-        if(stat(ss.str().c_str(), &st) != -1 || st.st_mode & S_IFREG)
+        if(stat(ss.str().c_str(), &st) != -1 && st.st_mode & S_IFREG)
         {
             log("Found config file: " + ss.str(), LVDE);
             log("Set working directory: " + dir, LVDE);

@@ -33,10 +33,10 @@ bool DetectDaemon()
         pidf.open("/tmp/lxtester.pid", ios::in);
         if(!pidf)
         {
-            cerr<<"Fail to read pid file."<<endl;
+            log("Fail to read pid file.", LVFA);
             exit(1);
         }
-        pidf>>daepid;
+        pidf >> daepid;
         pidf.close();
     }
     else
@@ -114,7 +114,7 @@ int main(int argc,char* argv[])
 
     if(geteuid())
     {
-        cerr<<"Please run lxtester as root!"<<endl;
+        log("Please run lxtester as root!", LVFA);
         return 2;
     }
 
@@ -126,7 +126,7 @@ int main(int argc,char* argv[])
         case DAE_DEFAULT:
             if(daerunning)
             {
-                cerr<<"There is another daemon running."<<endl;
+                log("There is another process running.", LVER);
                 return 1;
             }
             if(daemonmode)
@@ -135,7 +135,7 @@ int main(int argc,char* argv[])
         case DAE_STOP:
             if(!daerunning)
             {
-                cerr<<"There is no daemon running."<<endl;
+                log("There is no process running.", LVER);
                 return 1;
             }
             kill(daepid, 15);
@@ -143,7 +143,7 @@ int main(int argc,char* argv[])
         case DAE_RELOAD:
             if(!daerunning)
             {
-                cerr<<"There is no daemon running."<<endl;
+                log("There is no process running.", LVER);
                 return 1;
             }
             kill(daepid, 1);
@@ -151,7 +151,7 @@ int main(int argc,char* argv[])
         case DAE_RESTART:
             if(!daerunning)
             {
-                cerr<<"There is no daemon running."<<endl;
+                log("There is no process running.", LVER);
                 return 1;
             }
             kill(daepid, 15);
@@ -182,14 +182,14 @@ int maind()
 	if (lfp<0) return 1;
 	if (lockf(lfp,F_TLOCK,0) < 0)
     {
-        cerr<<"Can't lock \"/tmp/lxtester .lock\""<<endl;
-        cerr<<"Maybe another process is running."<<endl;
+        log("Can't lock \"/tmp/lxtester .lock\"", LVFA);
+        log("Maybe another process is running.");
         return 0;
     }
     ofstream pidf;
     pidf.open("/tmp/lxtester.pid");
     if(!pidf){
-        cerr<<"Fail to open pid file:"<<endl;
+        log("Fail to write pid file:", LVFA);
         return 2;
     }
     pidf<<getpid()<<endl;
@@ -202,7 +202,16 @@ int maind()
 	signal(SIGHUP,signal_handler);
 	signal(SIGINT,signal_handler);
 	signal(SIGTERM,signal_handler);
-	cout<<"Daemon Started"<<endl;
+    
+    string wdir = getWorkDir();
+    if(wdir == "")
+    {
+        log("Can't find config file: \"lxtester.conf\" ", LVFA);
+        return 2;
+    }
+    chdir(wdir.c_str());
+    log("Chdir to:" + wdir, LVDE);
+    log("Server Started", LVIN);
 	//JudgeSocket js("host", 1234, "token");
     while(!stopping)
     {
@@ -225,7 +234,7 @@ int maind()
         sleep(1);
 
     }
-    cout<<"Server stopped."<<endl;
+    log("Server stopped.", LVIN);
     return 0;
 }
 
@@ -245,18 +254,18 @@ void signal_handler(int sig)
 {
     switch(sig) {
         case SIGHUP:
-            cout<<"Reloading lxtester server..."<<endl;
-            cout<<"Server reloaded."<<endl;
+            log("Reloading lxtester server...", LVIN);
+            log("Server reloaded.", LVIN);
             break;
         case SIGINT:
             if(!daemonmode)
             {
-                cout<<"Stopping lxtester server..."<<endl;
+                log("Stopping lxtester server...", LVIN);
                 stopping = 1;
             }
             break;
         case SIGTERM:
-            cout<<"Stopping lxtester server..."<<endl;
+            log("Stopping lxtester server...", LVIN);
             stopping = 1;
             break;
     }
