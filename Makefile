@@ -2,7 +2,7 @@ CC = gcc
 CXX = g++
 CXXFLAGS = -std=c++11
 SRC = ./src
-OBJ = ./build/main.o ./build/runner.o ./build/utils.o
+OBJ = ./build/main.o ./build/runner.o ./build/submission.o ./build/utils.o
 
 build: mkdir ./bin/lxtester
 
@@ -11,6 +11,7 @@ build: mkdir ./bin/lxtester
 
 ./build/main.o: 
 ./build/runner.o:
+./build/submission.o:
 ./build/utils.o:
 
 .PHONY: mkdir

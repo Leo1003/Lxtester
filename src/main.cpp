@@ -198,7 +198,6 @@ int maind()
     signal(SIGTSTP,SIG_IGN);
 	signal(SIGTTOU,SIG_IGN);
 	signal(SIGTTIN,SIG_IGN);
-	signal(SIGCHLD,child_handler);
 	signal(SIGHUP,signal_handler);
 	signal(SIGINT,signal_handler);
 	signal(SIGTERM,signal_handler);
@@ -237,18 +236,6 @@ int maind()
     log("Server stopped.", LVIN);
     return 0;
 }
-
-void child_handler(int sig)
-{
-    while(true)
-    {
-        int chldsta;
-        pid_t chpid = waitpid(-1, &chldsta, WNOHANG);
-        if(chpid == 0) return;
-
-    }
-}
-
 
 void signal_handler(int sig)
 {
