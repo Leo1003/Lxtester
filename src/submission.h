@@ -11,13 +11,15 @@ public:
     int getId();
     pid_t getPID();
     result getResult();
-    void setResult();
+    void setResult(result res);
+    std::string getCode();
+    void setCode(std::string code);
     int compile();
     int execute();
 private:
     pid_t pid;
     int id;
-    std::string lang;
+    std::string lang, code;
     result res;
 };
 
