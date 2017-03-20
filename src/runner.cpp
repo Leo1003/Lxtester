@@ -107,7 +107,7 @@ int advFork(char** argp, pid_t& pid, bool wait)
     return status;
 }
 
-int parsemeta(string metafile, meta &metas)
+meta::meta (string metafile)
 {
     ifstream mf(metafile);
     map<string, string> m;
@@ -122,42 +122,39 @@ int parsemeta(string metafile, meta &metas)
     }
     try
     {
-        metas.cg_mem = tryParsell(m["cg-mem"]);
-        metas.csw_forced = tryParsell(m["csw-forced"]);
-        metas.csw_voluntary = tryParsell(m["csw-voluntary"]);
-        metas.max_rss = tryParsell(m["max-rss"]);
-        metas.time = tryParsell(m["time"], -1);
-        metas.time_wall = tryParsell(m["time-wall"], -1);
-        metas.exitcode = tryParse(m["exitcode"]);
-        metas.exitsig = tryParse(m["exitsig"]);
-        metas.isKilled = tryParse(m["killed"]);
-        metas.message = m["message"];
-        metas.status = m["status"];
+        cg_mem = tryParsell(m["cg-mem"]);
+        csw_forced = tryParsell(m["csw-forced"]);
+        csw_voluntary = tryParsell(m["csw-voluntary"]);
+        max_rss = tryParsell(m["max-rss"]);
+        time = tryParsell(m["time"], -1);
+        time_wall = tryParsell(m["time-wall"], -1);
+        exitcode = tryParse(m["exitcode"]);
+        exitsig = tryParse(m["exitsig"]);
+        isKilled = tryParse(m["killed"]);
+        message = m["message"];
+        status = m["status"];
     }
     catch(exception ex)
     {
         cerr << ex.what() << endl;
         cerr << "Bad META file format" <<endl;
-        return 2;
     }
-    return 0;
 }
 
-result genResult(exec_opt option, meta metas)
+result::result (exec_opt option, meta metas)
 {
-    result res;
-    res.time = metas.time;
-    res.mem = metas.max_rss;
-    res.exitcode = metas.exitcode;
-    res.signal = metas.exitsig;
-    res.isKilled = metas.isKilled;
+    time = metas.time;
+    mem = metas.max_rss;
+    exitcode = metas.exitcode;
+    signal = metas.exitsig;
+    isKilled = metas.isKilled;
     try
     {
         ifstream outf("/tmp/box/" + to_string(option.id) + "/box/stdout.log");
         string s;
         while(getline(outf, s))
         {
-            res.std_out += s + "\n";
+            std_out += s + "\n";
         }
         outf.close();
     }
@@ -172,7 +169,7 @@ result genResult(exec_opt option, meta metas)
         string s;
         while(getline(errf, s))
         {
-            res.std_err += s + "\n";
+            std_err += s + "\n";
         }
         errf.close();
     }
@@ -181,6 +178,5 @@ result genResult(exec_opt option, meta metas)
         log("Fail to open stderr", LVER);
         log(ex.what());
     }
-    return res;
 }
 

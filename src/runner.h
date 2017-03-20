@@ -13,13 +13,6 @@
 #include <sys/signal.h>
 #include "utils.h"
 
-struct result
-{
-    std::string std_out, std_err;
-    int time, mem, exitcode, signal;
-    bool isKilled;
-};
-
 struct exec_opt
 {
     long long time, mem;
@@ -33,14 +26,22 @@ struct meta
     int exitsig, exitcode;
     bool isKilled;
     std::string status, message;
+    meta();
+    meta(std::string metapath);
+};
+
+struct result
+{
+    std::string std_out, std_err;
+    int time, mem, exitcode, signal;
+    bool isKilled;
+    result();
+    result(exec_opt option, meta metas);
 };
 
 int boxInit(exec_opt option);
 pid_t boxExec(std::string cmd, exec_opt option);
 int boxDel(exec_opt option);
-
-int parsemeta(std::string metafile, meta &metas);
-result genResult(exec_opt option, meta metas);
 
 int advFork(char** argp, pid_t& pid, bool wait = true);
 #endif // RUNNER_H
