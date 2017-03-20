@@ -16,7 +16,7 @@
 struct exec_opt
 {
     long long time, mem;
-    int id, fsize, files, processes, stack;
+    int id, fsize, processes, stack;
     std::string std_in, metafile;
 };
 

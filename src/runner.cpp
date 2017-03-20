@@ -33,10 +33,9 @@ pid_t boxExec(string cmd, exec_opt option)
     args.PB("--time=" + to_string(timeout));
     args.PB("--wall-time=" + to_string(timeout));
     args.PB("--mem=" + to_string(option.mem));
-    args.PB("--process=" + to_string(option.processes));
+    args.PB("--processes=" + to_string(option.processes));
     args.PB("--stack=" + to_string(option.stack));
     args.PB("--fsize=" + to_string(option.fsize));
-    args.PB("--file-limit=" + to_string(option.files));
     args.PB("--stdin=" + option.std_in);
     args.PB("--stdout=stdout.log");
     args.PB("--stderr=stderr.log");
