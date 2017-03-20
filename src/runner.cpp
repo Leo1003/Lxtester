@@ -107,6 +107,11 @@ int advFork(char** argp, pid_t& pid, bool wait)
     return status;
 }
 
+meta::meta()
+{
+    
+}
+
 meta::meta (string metafile)
 {
     ifstream mf(metafile);
@@ -139,6 +144,11 @@ meta::meta (string metafile)
         cerr << ex.what() << endl;
         cerr << "Bad META file format" <<endl;
     }
+}
+
+result::result()
+{
+    
 }
 
 result::result (exec_opt option, meta metas)
