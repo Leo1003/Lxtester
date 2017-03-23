@@ -3,6 +3,7 @@
 #include <string>
 #include "utils.h"
 #include "runner.h"
+#include "testsuite.h"
 
 class submission
 {
@@ -14,13 +15,15 @@ public:
     void setResult(result res);
     std::string getCode();
     void setCode(std::string code);
-    int compile();
-    int execute();
+    pid_t compile();
+    pid_t execute();
 private:
     pid_t pid;
+    bool created;
     int id;
     std::string lang, code;
     result res;
+    exec_opt opt;
 };
 
 #endif // SUBMISSION_H
