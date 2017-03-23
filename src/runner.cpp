@@ -106,10 +106,7 @@ int advFork(char** argp, pid_t& pid, bool wait)
     return status;
 }
 
-meta::meta()
-{
-    
-}
+meta::meta() { }
 
 meta::meta (string metafile)
 {
@@ -145,10 +142,7 @@ meta::meta (string metafile)
     }
 }
 
-result::result()
-{
-    
-}
+result::result() { }
 
 result::result (exec_opt option, meta metas)
 {

@@ -7,15 +7,19 @@
 #include <vector>
 #include <unistd.h>
 
-//Define log level prefix
-#define LVFA "[FATAL]"
-#define LVER "[ERROR]"
-#define LVWA "[WARN] "
-#define LVIN "[INFO] "
-#define LVDE "[DEBUG]"
-#define LVNU "       "
+enum loglevel
+{
+    LVDE,
+    LVIN,
+    LVWA,
+    LVER,
+    LVFA,
+    LVNU
+};
 
-void log(std::string mes, std::string lvpre = LVNU);
+void log(std::string mes, loglevel lvpre = LVNU);
+loglevel getLevel();
+void setLevel(loglevel lv);
 std::string getSelfPath();
 std::string getWorkDir();
 

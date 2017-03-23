@@ -1,10 +1,36 @@
 #include "utils.h"
 using namespace std;
 
-void log(string mes, string lvpre)
+loglevel lvlast = LVNU, lvset = LVDE;
+void log(string mes, loglevel lvpre)
 {
-    cerr << lvpre << mes << endl;
+    if(lvpre < lvset)
+        return;
+    if(lvpre == LVNU && lvlast < lvset)
+        return;
+    string lvmes;
+    switch(lvpre)
+    {
+        case LVFA : lvmes = "[FATAL]"; break;
+        case LVER : lvmes = "[ERROR]"; break;
+        case LVWA : lvmes = "[WARN] "; break;
+        case LVIN : lvmes = "[INFO] "; break;
+        case LVDE : lvmes = "[DEBUG]"; break;
+        case LVNU : lvmes = "       "; break; 
+    }
+    cerr << lvmes << mes << endl;
 }
+
+loglevel getLevel()
+{
+    return lvset;
+}
+
+void setLevel(loglevel lv)
+{
+    lvset = lv;
+}
+
 
 string getSelfPath()
 {
@@ -56,7 +82,7 @@ int tryParse(string str, int def)
     }
     catch(invalid_argument ex)
     {
-        log("Parsing string error:", LVWA);
+        log("Parsing string error:", LVER);
         log(ex.what());
         return def;
     }
@@ -72,7 +98,7 @@ long long tryParsell(string str, long long def)
     }
     catch(invalid_argument ex)
     {
-        log("Parsing string error:", LVWA);
+        log("Parsing string error:", LVER);
         log(ex.what());
         return def;
     }
