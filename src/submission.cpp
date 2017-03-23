@@ -1,10 +1,15 @@
 #include "submission.h"
 using namespace std;
+using boost::format;
 
-submission::submission(int id, string lang)
+submission::submission(int id, string lang) : submission(id, lang, "exe", "src") {}
+submission::submission(int id, string lang, string exe, string src)
 {
     this->id = id;
-    this->lang = lang; //TODO:directly change string into langusge struct
+    this->exename = exe;
+    this->srcname = src;
+    this->lang = getLang(lang);
+    
     opt.id = id;
     opt.fsize = 65536;
     opt.time = 30;
@@ -13,6 +18,31 @@ submission::submission(int id, string lang)
     opt.stack = 256;
     opt.metafile = "./meta/task" + to_string(id);
     opt.std_in = "stdin.txt";
+    //create sandbox
+    boxInit(opt);
+}
+
+submission::~submission()
+{
+    //remove sandbox
+    boxDel(opt);
+}
+
+language submission::getLang(string lang)
+{
+    language l = langs[lang];
+    try
+    {
+        l.complier = (format(l.complier) % srcname % exename).str();
+        l.compargs = (format(l.compargs) % srcname % exename).str();
+        l.executer = (format(l.executer) % srcname % exename).str();
+        l.execargs = (format(l.execargs) % srcname % exename).str();
+    }
+    catch (exception ex)
+    {
+        log("Error when parsing language format string", LVER);
+    }
+    return l;
 }
 
 string submission::getCode()
@@ -47,26 +77,24 @@ void submission::setResult(result res)
 
 pid_t submission::compile()
 {
-    language l = langs[lang];
-    //TODO:parse formatted string to real arg
-    if (!l.needComplie)
+    if (!lang.needComplie)
         return 0;
     if (!created)
     {
         boxInit(opt);
         created = true;
     }
-    return boxExec(l.complier + " " + l.compargs, opt);
+    pid = boxExec(lang.complier + " " + lang.compargs, opt);
+    return pid;
 }
 
 pid_t submission::execute()
 {
-    language l = langs[lang];
-    //TODO:parse formatted string to real arg
     if (!created)
     {
         boxInit(opt);
         created = true;
     }
-    return boxExec(l.executer + " " + l.execargs, opt);
+    pid = boxExec(lang.executer + " " + lang.execargs, opt);
+    return pid;
 }
