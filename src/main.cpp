@@ -9,6 +9,7 @@
 #include <sys/signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "server_socket.h"
 #include "utils.h"
 
 using namespace std;
@@ -211,27 +212,11 @@ int maind()
     chdir(wdir.c_str());
     log("Chdir to:" + wdir, LVDE);
     log("Server Started", LVIN);
-	//JudgeSocket js("host", 1234, "token");
+	//ServerSocket s(); //TODO:Add config
     while(!stopping)
     {
-        /*
-        Submission sub = js.checkJobs();
-        if(sub.id != -1)
-        {
-            switch(sub.job)
-            {
-            case J_Verdict:
-                break;
-            case J_Test:
-
-                break;
-            default:
-                continue;
-            }
-        }
-        */
+        
         sleep(1);
-
     }
     log("Server stopped.", LVIN);
     return 0;
