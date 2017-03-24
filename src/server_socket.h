@@ -19,6 +19,7 @@ class ServerSocket
 {
 public:
     ServerSocket(std::string host, short port, std::string token);
+    ~ServerSocket();
     bool getConnected() const;
     int connect();
     int disconnect();
@@ -29,7 +30,7 @@ private:
     sio::socket::ptr s;
     std::mutex _lock;
     std::condition_variable _cv;
-    bool unlocked, failed;
+    bool unlocked, failed, shutdowned;
     std::string addr;
     std::string token;
     std::queue<submission> jobque;

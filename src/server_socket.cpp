@@ -17,6 +17,11 @@ ServerSocket::ServerSocket(string host, short port, string token)
     cli.set_close_listener(bind(&ServerSocket::on_closed, this, placeholders::_1));
 }
 
+ServerSocket::~ServerSocket()
+{
+    disconnect();
+}
+
 int ServerSocket::connect()
 {
     if(cli.opened())
@@ -34,6 +39,38 @@ int ServerSocket::connect()
     s = cli.socket("lxtester");
     
     return 0;
+}
+
+int ServerSocket::disconnect()
+{
+    if(!cli.opened())
+        return 127;
+    ULOCK
+    log("Disconnecting from server...", LVIN);
+    shutdowned = true;
+    cli.close();
+    if(!unlocked)
+        _cv.wait(_ul);
+    _ul.unlock();
+    return 0;
+}
+
+bool ServerSocket::getConnected() const
+{
+    return cli.opened();
+}
+
+submission ServerSocket::getSubmission()
+{
+    ULOCK
+    if(jobque.empty())
+    {
+        submission emp(-1, "");
+        return emp;
+    }
+    submission s = jobque.front();
+    jobque.pop();
+    return s;
 }
 
 inline void ServerSocket::resetmt()
@@ -54,6 +91,7 @@ void ServerSocket::on_failed()
 {
     ULOCK
     failed = true;
+    log("Socket failed", LVWA);
     _cv.notify_all();
 }
 
@@ -62,7 +100,7 @@ void ServerSocket::on_closed(client::close_reason const& reason)
     ULOCK
     if(reason != client::close_reason_normal)
     {
-        while(!cli.opened())
+        while(!cli.opened() && !shutdowned)
         {
             log("Lost connect to server.", LVER);
             log("Trying to reconnect...", LVIN);
@@ -75,6 +113,29 @@ void ServerSocket::on_closed(client::close_reason const& reason)
             }
         }
     }
+    else
+    {
+        log("Disconnected.", LVIN);
+    }
     unlocked = true;
     _cv.notify_all();
 }
+
+void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_ack, message::list& ack_message)
+{
+    ULOCK
+    map<string, message::ptr> msg = mess->get_map();
+    int id = msg["id"]->get_int();
+    string l = msg["language"]->get_string();
+    submission sub(id, l);
+    if(msg["customname"]->get_bool())
+    {
+        string exefile = msg["exefile"]->get_string();
+        string srcfile = msg["srcfile"]->get_string();
+        //Override the origin submission object.
+        sub = submission(id, l, exefile, srcfile);
+    }
+    sub.setCode(msg["code"]->get_string());
+    jobque.push(sub);
+}
+
