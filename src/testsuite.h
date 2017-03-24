@@ -10,7 +10,7 @@ struct language
     bool needComplie;
 };
 
-std::map<std::string, language> langs;
-std::map<pid_t, int> pidmap;
+extern std::map<std::string, language> langs;
+extern std::map<pid_t, int> pidmap;
 
 #endif // TESTSUITE_H

@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11
 LIB = ./lib
 LIBS = -L $(LIB) -lboost_date_time -lboost_random -lboost_system -lsioclient -lsioclient_tls -lpthread
 SRC = ./src
-OBJ = ./build/main.o ./build/runner.o ./build/submission.o ./build/utils.o ./build/server_socket.o
+OBJ = ./build/main.o ./build/runner.o ./build/submission.o ./build/testsuite.o ./build/utils.o ./build/server_socket.o 
 ISODIR = ./isolate/
 
 build: mkdir ./bin/lxtester ./bin/isolate
@@ -20,6 +20,7 @@ build: mkdir ./bin/lxtester ./bin/isolate
 ./build/main.o: 
 ./build/runner.o:
 ./build/submission.o:
+./build/testsuite.o:
 ./build/utils.o:
 ./build/server_socket.o:
 
