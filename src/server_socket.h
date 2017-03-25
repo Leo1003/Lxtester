@@ -24,7 +24,7 @@ public:
     int connect();
     int disconnect();
     submission getSubmission();
-    //TODO:Add sendResult function
+    void sendResult(const submission& sub);
 private:
     sio::client cli;
     sio::socket::ptr s;
@@ -39,9 +39,11 @@ private:
     //Listeners
     void on_connected();
     void on_failed();
+    void on_error(sio::message::ptr const& message);
     void on_closed(sio::client::close_reason const& reason);
     //Events
     void _job(const std::string& name, sio::message::ptr const& mess, bool need_ack, sio::message::list& ack_message);
+    void _callback(const std::string& name, sio::message::ptr const& mess, bool need_ack, sio::message::list& ack_message);
 };
 
 #endif // SERVER_SOCKET_H

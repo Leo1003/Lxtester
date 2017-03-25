@@ -22,7 +22,7 @@ int boxInit(exec_opt option)
         return 255;
 }
 
-pid_t boxExec(string cmd, exec_opt option)
+pid_t boxExec(string cmd, exec_opt option, bool enableStdin)
 {
     vector<string> args;
     args.PB("./isolate"); //TODO:fix relative path
@@ -36,7 +36,8 @@ pid_t boxExec(string cmd, exec_opt option)
     args.PB("--processes=" + to_string(option.processes));
     args.PB("--stack=" + to_string(option.stack));
     args.PB("--fsize=" + to_string(option.fsize));
-    args.PB("--stdin=" + option.std_in);
+    if(enableStdin)
+        args.PB("--stdin=" + option.std_in);
     args.PB("--stdout=stdout.log");
     args.PB("--stderr=stderr.log");
     args.PB("--stdin=" + option.metafile);

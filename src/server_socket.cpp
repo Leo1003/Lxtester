@@ -28,8 +28,8 @@ int ServerSocket::connect()
         return 0;
     map<string,string> query;
     query["passtoken"] = token;
-    resetmt();
     cli.connect(addr,query);
+    resetmt();
     ULOCK
     if(!unlocked && !failed)
         _cv.wait(_ul);
@@ -37,7 +37,9 @@ int ServerSocket::connect()
     if(failed)
         return 1;
     s = cli.socket("lxtester");
-    
+    s->on_error(bind(&ServerSocket::on_error, this, placeholders::_1));
+    s->on("Job", bind(&ServerSocket::_job, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4));
+    s->on("CallBack", bind(&ServerSocket::_callback, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4));
     return 0;
 }
 
@@ -49,7 +51,8 @@ int ServerSocket::disconnect()
     log("Disconnecting from server...", LVIN);
     shutdowned = true;
     cli.close();
-    if(!unlocked)
+    resetmt();
+    if(!unlocked && !failed)
         _cv.wait(_ul);
     _ul.unlock();
     return 0;
@@ -73,6 +76,27 @@ submission ServerSocket::getSubmission()
     return s;
 }
 
+void ServerSocket::sendResult(const submission& sub)
+{
+    ULOCK
+    object_message mess = *(static_pointer_cast<object_message>(object_message::create()));
+    mess.insert("id", int_message::create(sub.getId()));
+    result re = sub.getResult();
+    mess.insert("time", int_message::create(re.time));
+    mess.insert("memory", int_message::create(re.mem));
+    mess.insert("exitcode", int_message::create(re.exitcode));
+    mess.insert("signal", int_message::create(re.signal));
+    mess.insert("killed", bool_message::create(re.isKilled));
+    mess.insert("output", string_message::create(re.std_out));
+    mess.insert("error", string_message::create(re.std_err));
+    s->emit("Result", message::ptr(&mess));
+    resetmt();
+    if(!unlocked && !failed)
+        _cv.wait(_ul);
+    _ul.unlock();
+}
+
+
 inline void ServerSocket::resetmt()
 {
     unlocked = false;
@@ -93,6 +117,12 @@ void ServerSocket::on_failed()
     failed = true;
     log("Socket failed", LVWA);
     _cv.notify_all();
+}
+
+void ServerSocket::on_error(const sio::message::ptr& message)
+{
+    ULOCK
+    log("Socket Error", LVER);
 }
 
 void ServerSocket::on_closed(client::close_reason const& reason)
@@ -124,18 +154,35 @@ void ServerSocket::on_closed(client::close_reason const& reason)
 void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_ack, message::list& ack_message)
 {
     ULOCK
-    map<string, message::ptr> msg = mess->get_map();
-    int id = msg["id"]->get_int();
-    string l = msg["language"]->get_string();
-    submission sub(id, l);
-    if(msg["customname"]->get_bool())
+    //map<string, message::ptr> msg = mess->get_map();
+    try
     {
-        string exefile = msg["exefile"]->get_string();
-        string srcfile = msg["srcfile"]->get_string();
-        //Override the origin submission object.
-        sub = submission(id, l, exefile, srcfile);
+        object_message msg = *(dynamic_pointer_cast<object_message>(mess));
+        int id = msg["id"]->get_int();
+        string l = msg["language"]->get_string();
+        submission sub(id, l);
+        if(msg["customname"]->get_bool())
+        {
+            string exefile = msg["exefile"]->get_string();
+            string srcfile = msg["srcfile"]->get_string();
+            //Override the original submission object.
+            sub = submission(id, l, exefile, srcfile);
+        }
+        sub.setCode(msg["code"]->get_string());
+        jobque.push(sub);
     }
-    sub.setCode(msg["code"]->get_string());
-    jobque.push(sub);
+    catch(exception ex)
+    {
+        log("Failed to receive job", LVFA);
+        log(ex.what());
+    }
+}
+
+void ServerSocket::_callback(const std::string& name, const sio::message::ptr& mess, bool need_ack, sio::message::list& ack_message)
+{
+    ULOCK
+    unlocked = true;
+    log("A message had been sucessfully sent to the server.", LVDE);
+    _cv.notify_all();
 }
 

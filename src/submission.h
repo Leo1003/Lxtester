@@ -12,12 +12,14 @@ public:
     submission(int id, std::string lang);
     submission(int id, std::string lang, std::string exe, std::string src);
     ~submission();
-    int getId();
-    pid_t getPID();
-    result getResult();
+    int getId() const;
+    pid_t getPID() const;
+    result getResult() const;
     void setResult(result res);
-    std::string getCode();
+    std::string getCode() const;
     void setCode(std::string code);
+    std::string getStdin() const;
+    void setStdin(std::string data);
     pid_t compile();
     pid_t execute();
 private:
@@ -25,7 +27,7 @@ private:
     pid_t pid;
     bool created;
     int id;
-    std::string code, exename, srcname;
+    std::string code, exename, srcname, stdin;
     language lang;
     result res;
     exec_opt opt;

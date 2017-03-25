@@ -18,6 +18,8 @@ void log(string mes, loglevel lvpre)
         case LVDE : lvmes = "[DEBUG]"; break;
         case LVNU : lvmes = "       "; break; 
     }
+    if(lvpre != LVNU)
+        lvlast = lvpre;
     cerr << lvmes << mes << endl;
 }
 

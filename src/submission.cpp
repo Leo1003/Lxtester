@@ -45,7 +45,7 @@ language submission::getLang(string lang)
     return l;
 }
 
-string submission::getCode()
+string submission::getCode() const
 {
     return code;
 }
@@ -55,17 +55,27 @@ void submission::setCode(string code)
     this->code = code;
 }
 
-int submission::getId()
+string submission::getStdin() const
+{
+    return stdin;
+}
+
+void submission::setStdin(string data)
+{
+    this->stdin = data;
+}
+
+int submission::getId() const
 {
     return id;
 }
 
-pid_t submission::getPID()
+pid_t submission::getPID() const
 {
     return pid;
 }
 
-result submission::getResult()
+result submission::getResult() const
 {
     return res;
 }

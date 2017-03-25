@@ -40,7 +40,7 @@ struct result
 };
 
 int boxInit(exec_opt option);
-pid_t boxExec(std::string cmd, exec_opt option);
+pid_t boxExec(std::string cmd, exec_opt option, bool enableStdin = true);
 int boxDel(exec_opt option);
 
 int advFork(char** argp, pid_t& pid, bool wait = true);
