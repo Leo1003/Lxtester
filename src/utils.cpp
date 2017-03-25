@@ -20,7 +20,10 @@ void log(string mes, loglevel lvpre)
     }
     if(lvpre != LVNU)
         lvlast = lvpre;
-    cerr << lvmes << mes << endl;
+    string buf;
+    stringstream ss(mes);
+    while(getline(ss, buf))
+        cerr << lvmes << buf << endl;
 }
 
 loglevel getLevel()

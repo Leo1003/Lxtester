@@ -9,6 +9,7 @@
 #include <sys/signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "config.h"
 #include "server_socket.h"
 #include "utils.h"
 
@@ -21,7 +22,6 @@ int daepid;
 int maind();
 void child_handler(int);
 void signal_handler(int);
-
 
 bool DetectDaemon()
 {
