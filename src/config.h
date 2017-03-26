@@ -35,6 +35,10 @@ public:
     using config_section::getInt;
     using config_section::getString;
 private:
+    static const std::regex reg_empty;
+    static const std::regex reg_comment;
+    static const std::regex reg_section;
+    static const std::regex reg_setting;
     std::vector<std::string> seclist;
     std::map<std::string, config_section> sec;
 };

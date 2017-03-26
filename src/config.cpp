@@ -66,6 +66,11 @@ void config_section::insert(std::string key, std::string value)
  * class config
  * -------------------------*/
 
+const regex config::reg_empty(R"(^[\s]*$)");
+const regex config::reg_comment(R"(^[\s]*#.*)");
+const regex config::reg_section(R"(^[\s]*\[(.+)\].*)");
+const regex config::reg_setting(R"(^[\s]*([\w]+)[\s]*=[\s]*([\S]*).*)");
+
 config::config() { }
 
 config::config(std::string path) : config_section()
@@ -76,10 +81,6 @@ config::config(std::string path) : config_section()
         log("Loading config: " + path, LVDE);
         int linec = 0;
         string buf, secpointer = "_";
-        regex reg_empty("^[\\s]*$");
-        regex reg_comment("^[\\s]*#.*");
-        regex reg_section("^[\\s]*\\[(.+)\\].*");
-        regex reg_setting("^[\\s]*([\\w]+)[\\s]*=[\\s]*([\\S]*).*");
         smatch sm;
         while(getline(conf, buf))
         {
