@@ -70,13 +70,12 @@ void ConfigLoader()
 
 bool DetectDaemon()
 {
-    int lfp=open("/tmp/lxtester.lock",O_RDWR,0640);
+    int lfp=open(LOCKFile.c_str(), O_RDWR, 0640);
 	if (lfp<0) return 0;
     if (lockf(lfp,F_TEST,0) < 0)
     {
         daerunning = true;
-        ifstream pidf;
-        pidf.open("/tmp/lxtester.pid", ios::in);
+        ifstream pidf(PIDFile);
         if(!pidf)
         {
             log("Fail to read pid file.", LVFA);
@@ -223,24 +222,24 @@ int maind()
         for(int i = getdtablesize();i >= 0;--i)
             close(i);
         open("/dev/null",O_RDWR);/* open stdin */
-        open("/tmp/lxtester.out.log", O_RDWR|O_CREAT|O_APPEND, newfile);/* stdout */
-        open("/tmp/lxtester.err.log", O_RDWR|O_CREAT|O_APPEND, newfile);/* stderr */
+        open(LogFile.c_str(), O_RDWR|O_CREAT|O_APPEND, newfile);/* stdout */
+        dup2(1, 2);/* stderr */
     }
-    int lfp=open("/tmp/lxtester.lock",O_RDWR|O_CREAT|O_TRUNC,0640);
-	if (lfp<0) return 1;
-	if (lockf(lfp,F_TLOCK,0) < 0)
+    int lfp = open(LOCKFile.c_str(), O_RDWR|O_CREAT|O_TRUNC, 0640);
+	if (lfp < 0) return 1;
+	if (lockf(lfp, F_TLOCK, 0) < 0)
     {
-        log("Can't lock \"/tmp/lxtester .lock\"", LVFA);
+        log("Can't lock \"" + LOCKFile + "\"", LVFA);
         log("Maybe another process is running.");
-        return 0;
+        return 2;
     }
     ofstream pidf;
-    pidf.open("/tmp/lxtester.pid");
+    pidf.open(PIDFile);
     if(!pidf){
         log("Fail to write pid file:", LVFA);
         return 2;
     }
-    pidf<<getpid()<<endl;
+    pidf << getpid() << endl;
     pidf.close();
 
     signal(SIGTSTP,SIG_IGN);
@@ -250,10 +249,9 @@ int maind()
 	signal(SIGINT,signal_handler);
 	signal(SIGTERM,signal_handler);
     
-    
-    
     chdir(WorkingDir.c_str());
     log("Chdir to:" + string(getcwd(NULL, 0)), LVDE);
+    
     loadLangs(LangFile);
     log("Server Started", LVIN);
 	//ServerSocket s(); //TODO:Add config
