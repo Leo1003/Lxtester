@@ -6,6 +6,15 @@
 #include "runner.h"
 #include "testsuite.h"
 
+struct result
+{
+    std::string std_out, std_err;
+    int time, mem, exitcode, signal;
+    bool isKilled;
+    result();
+    result(exec_opt option, meta metas);
+};
+
 class submission
 {
 public:

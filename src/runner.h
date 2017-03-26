@@ -30,15 +30,6 @@ struct meta
     meta(std::string metapath);
 };
 
-struct result
-{
-    std::string std_out, std_err;
-    int time, mem, exitcode, signal;
-    bool isKilled;
-    result();
-    result(exec_opt option, meta metas);
-};
-
 int boxInit(exec_opt option);
 pid_t boxExec(std::string cmd, exec_opt option, bool enableStdin = true);
 int boxDel(exec_opt option);

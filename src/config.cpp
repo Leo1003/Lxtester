@@ -2,8 +2,8 @@
 using namespace std;
 
 /*--------------------------
-    class config_section
-  --------------------------*/
+ * class config_section
+ * -------------------------*/
 
 config_section::config_section() : config_section("_") { }
 config_section::config_section(std::string name)
@@ -63,8 +63,8 @@ void config_section::insert(std::string key, std::string value)
 }
 
 /*--------------------------
-    class config
-  --------------------------*/
+ * class config
+ * -------------------------*/
 
 config::config() { }
 

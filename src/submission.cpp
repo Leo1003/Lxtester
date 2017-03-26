@@ -2,6 +2,10 @@
 using namespace std;
 using boost::format;
 
+/*--------------------------
+ * class submission
+ * -------------------------*/
+
 submission::submission(int id, string lang) : submission(id, lang, "exe", "src") {}
 submission::submission(int id, string lang, string exe, string src)
 {
@@ -108,3 +112,49 @@ pid_t submission::execute()
     pid = boxExec(lang.executer + " " + lang.execargs, opt);
     return pid;
 }
+
+/*--------------------------
+ * struct result
+ * -------------------------*/
+
+result::result() { }
+
+result::result (exec_opt option, meta metas)
+{
+    time = metas.time;
+    mem = metas.max_rss;
+    exitcode = metas.exitcode;
+    signal = metas.exitsig;
+    isKilled = metas.isKilled;
+    try
+    {
+        ifstream outf("/tmp/box/" + to_string(option.id) + "/box/stdout.log");
+        string s;
+        while(getline(outf, s))
+        {
+            std_out += s + "\n";
+        }
+        outf.close();
+    }
+    catch(exception ex)
+    {
+        log("Fail to open output", LVER);
+        log(ex.what());
+    }
+    try
+    {
+        ifstream errf("/tmp/box/" + to_string(option.id) + "/box/stderr.log");
+        string s;
+        while(getline(errf, s))
+        {
+            std_err += s + "\n";
+        }
+        errf.close();
+    }
+    catch(exception ex)
+    {
+        log("Fail to open stderr", LVER);
+        log(ex.what());
+    }
+}
+
