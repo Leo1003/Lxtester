@@ -3,6 +3,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "config.h"
+#include "utils.h"
 
 struct language
 {
@@ -12,5 +14,7 @@ struct language
 
 extern std::map<std::string, language> langs;
 extern std::map<pid_t, int> pidmap;
+
+void loadLangs(std::string confpath);
 
 #endif // TESTSUITE_H

@@ -57,6 +57,14 @@ std::string config_section::getName() const
     return name;
 }
 
+bool config_section::isExist(std::string key) const
+{
+    if(data.find(key) == data.end())
+        return false;
+    else
+        return true;
+}
+
 void config_section::insert(std::string key, std::string value)
 {
     data[key] = value;
@@ -69,7 +77,7 @@ void config_section::insert(std::string key, std::string value)
 const regex config::reg_empty(R"(^[\s]*$)");
 const regex config::reg_comment(R"(^[\s]*#.*)");
 const regex config::reg_section(R"(^[\s]*\[(.+)\].*)");
-const regex config::reg_setting(R"(^[\s]*([\w]+)[\s]*=[\s]*([\S]*).*)");
+const regex config::reg_setting(R"(^[\s]*([\w]+)[\s]*=[\s]*([\S ]*?)[\s]*$)");
 
 config::config() { }
 

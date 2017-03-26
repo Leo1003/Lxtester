@@ -45,7 +45,7 @@ string getSelfPath()
     return out;
 }
 
-string getWorkDir()
+string getConfDir()
 {
     string path = getSelfPath();
     regex reg("\\/([^\\/]+)");
@@ -75,6 +75,26 @@ string getWorkDir()
     }
     log("Can't match path", LVER);
     return "";
+}
+
+bool isFile(string path)
+{
+    struct stat st;
+    if(stat(path.c_str(), &st) != 0 && S_ISREG(st.st_mode))
+    {
+        return false;
+    }
+    return true;
+}
+
+bool isDir(string path)
+{
+    struct stat st;
+    if(stat(path.c_str(), &st) != 0 && S_ISDIR(st.st_mode))
+    {
+        return false;
+    }
+    return true;
 }
 
 int tryParse(string str, int def)

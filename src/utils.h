@@ -21,7 +21,10 @@ void log(std::string mes, loglevel lvpre = LVNU);
 loglevel getLevel();
 void setLevel(loglevel lv);
 std::string getSelfPath();
-std::string getWorkDir();
+std::string getConfDir();
+
+bool isFile(std::string path);
+bool isDir(std::string path);
 
 int tryParse(std::string str, int def = 0);
 long long tryParsell(std::string str, long long def = 0);

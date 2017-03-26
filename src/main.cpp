@@ -11,17 +11,62 @@
 #include <sys/types.h>
 #include "config.h"
 #include "server_socket.h"
+#include "submission.h"
 #include "utils.h"
-
 using namespace std;
 
-bool daemonmode = true;
 bool daerunning;
 int daepid;
 
+/*--------------------
+ * config variables
+ * -------------------*/
+config mainconf;
+bool DaemonMode = true;
+string PIDFile = "/tmp/lxtester.pid";
+string LOCKFile = "/tmp/lxtester.lock";
+string BoxDir = "/tmp/box";
+string WorkingDir = ".";
+string LogFile = "/tmp/lxtester.log";
+string LangFile = "languages.conf";
+string ServerAddr;
+short ServerPort = 80;
+string ServerToken;
+
 int maind();
-void child_handler(int);
 void signal_handler(int);
+pid_t testWorkFlow(submission& sub);
+
+void ConfigLoader()
+{
+    string confpath = getConfDir() + "/lxtester.conf";
+    if(!isFile(confpath))
+    {
+        log("Can't open config file.", LVFA);
+        log(strerror(errno));
+        exit(1);
+    }
+    config mainconf(confpath);
+    DaemonMode = mainconf.getBool("DaemonMode");
+    if(mainconf.isExist("PIDFile"))
+        PIDFile = mainconf.getString("PIDFile");
+    if(mainconf.isExist("LockFile"))
+        LOCKFile = mainconf.getString("LockFile");
+    if(mainconf.isExist("SandboxDirectory"))
+        BoxDir = mainconf.getString("SandboxDirectory");
+    if(isDir(mainconf.getString("WorkingDirectory")))
+        WorkingDir = mainconf.getString("WorkingDirectory");
+    if(mainconf.isExist("LogFile"))
+        LogFile = mainconf.getString("LogFile");
+    if(mainconf.isExist("LanguageFile"))
+        LangFile = mainconf.getString("LanguageFile");
+    if(mainconf.isExist("ServerAddress"))
+        ServerAddr = mainconf.getString("ServerAddress");
+    if(mainconf.isExist("ServerPort"))
+        ServerPort = mainconf.getInt("ServerPort");
+    if(mainconf.isExist("ServerToken"))
+        ServerToken = mainconf.getString("ServerToken");
+}
 
 bool DetectDaemon()
 {
@@ -86,12 +131,12 @@ int main(int argc,char* argv[])
             case 'd':
                 if(ty)usage(true);
                 ty = DAE_START;
-                daemonmode = true;
+                DaemonMode = true;
                 break;
             case 'D':
                 if(ty)usage(true);
                 ty = DAE_START;
-                daemonmode = false;
+                DaemonMode = false;
                 break;
             case 'r':
                 if(ty)usage(true);
@@ -119,6 +164,8 @@ int main(int argc,char* argv[])
         return 2;
     }
 
+    ConfigLoader();
+    
     DetectDaemon();
 
     switch(ty)
@@ -130,7 +177,7 @@ int main(int argc,char* argv[])
                 log("There is another process running.", LVER);
                 return 1;
             }
-            if(daemonmode)
+            if(DaemonMode)
                 daemon(1,0);
             return maind();
         case DAE_STOP:
@@ -171,7 +218,7 @@ mode_t newfile = 0644;
 int maind()
 {
     umask(0022);
-    if(daemonmode)
+    if(DaemonMode)
     {
         for(int i = getdtablesize();i >= 0;--i)
             close(i);
@@ -203,14 +250,11 @@ int maind()
 	signal(SIGINT,signal_handler);
 	signal(SIGTERM,signal_handler);
     
-    string wdir = getWorkDir();
-    if(wdir == "")
-    {
-        log("Can't find config file: \"lxtester.conf\" ", LVFA);
-        return 2;
-    }
-    chdir(wdir.c_str());
-    log("Chdir to:" + wdir, LVDE);
+    
+    
+    chdir(WorkingDir.c_str());
+    log("Chdir to:" + string(getcwd(NULL, 0)), LVDE);
+    loadLangs(LangFile);
     log("Server Started", LVIN);
 	//ServerSocket s(); //TODO:Add config
     while(!stopping)
@@ -230,7 +274,7 @@ void signal_handler(int sig)
             log("Server reloaded.", LVIN);
             break;
         case SIGINT:
-            if(!daemonmode)
+            if(!DaemonMode)
             {
                 log("Stopping lxtester server...", LVIN);
                 stopping = 1;
@@ -243,3 +287,9 @@ void signal_handler(int sig)
     }
     return;
 }
+
+pid_t testWorkFlow(submission& sub)
+{
+    
+}
+

@@ -17,6 +17,7 @@ public:
     bool getBool(std::string key) const;
     int64_t getInt(std::string key) const;
     std::string getString(std::string key) const;
+    bool isExist(std::string key) const;
     void insert(std::string key, std::string value);
 private:
     std::string name;
@@ -31,6 +32,7 @@ public:
     const config_section& operator[] (std::string key) const;
     const std::vector<std::string>& getSections() const;
     
+    using config_section::isExist;
     using config_section::getBool;
     using config_section::getInt;
     using config_section::getString;
