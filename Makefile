@@ -15,7 +15,7 @@ build: mkdir ./bin/lxtester ./bin/isolate
 .PHONY: ./bin/isolate
 ./bin/isolate: 
 	$(MAKE) -C $(ISODIR)
-	mv ./isolate/isolate ./bin/isolate
+	cp ./isolate/isolate ./bin/isolate
 
 ./build/main.o: 
 ./build/config.o: 

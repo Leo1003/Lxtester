@@ -47,14 +47,15 @@ void ConfigLoader()
         exit(1);
     }
     config mainconf(confpath);
-    DaemonMode = mainconf.getBool("DaemonMode");
+    if(mainconf.isExist("DaemonMode"))
+        DaemonMode = mainconf.getBool("DaemonMode");
     if(mainconf.isExist("PIDFile"))
         PIDFile = mainconf.getString("PIDFile");
     if(mainconf.isExist("LockFile"))
         LOCKFile = mainconf.getString("LockFile");
     if(mainconf.isExist("SandboxDirectory"))
         BoxDir = mainconf.getString("SandboxDirectory");
-    if(isDir(mainconf.getString("WorkingDirectory")))
+    if(mainconf.isExist("WorkingDirectory") && isDir(mainconf.getString("WorkingDirectory")))
         WorkingDir = mainconf.getString("WorkingDirectory");
     if(mainconf.isExist("LogFile"))
         LogFile = mainconf.getString("LogFile");
@@ -66,6 +67,8 @@ void ConfigLoader()
         ServerPort = mainconf.getInt("ServerPort");
     if(mainconf.isExist("ServerToken"))
         ServerToken = mainconf.getString("ServerToken");
+    if(mainconf.isExist("DebugLevel"))
+        setLevel((loglevel)mainconf.getInt("DebugLevel"));
 }
 
 bool DetectDaemon()
@@ -122,6 +125,7 @@ int main(int argc,char* argv[])
 {
     /*** Parse Arguments ***/
     int opt;
+    bool argdm = DaemonMode;
     OptType ty = DAE_DEFAULT;
     while((opt = getopt_long(argc, argv, optstring, longopts, NULL)) != -1)
     {
@@ -130,12 +134,12 @@ int main(int argc,char* argv[])
             case 'd':
                 if(ty)usage(true);
                 ty = DAE_START;
-                DaemonMode = true;
+                argdm = true;
                 break;
             case 'D':
                 if(ty)usage(true);
                 ty = DAE_START;
-                DaemonMode = false;
+                argdm = false;
                 break;
             case 'r':
                 if(ty)usage(true);
@@ -164,6 +168,7 @@ int main(int argc,char* argv[])
     }
 
     ConfigLoader();
+    DaemonMode = argdm; //prevent daemonmode config override argument
     
     DetectDaemon();
 
@@ -217,6 +222,8 @@ mode_t newfile = 0644;
 int maind()
 {
     umask(0022);
+    
+    chdir(WorkingDir.c_str());
     if(DaemonMode)
     {
         for(int i = getdtablesize();i >= 0;--i)
@@ -225,6 +232,7 @@ int maind()
         open(LogFile.c_str(), O_RDWR|O_CREAT|O_APPEND, newfile);/* stdout */
         dup2(1, 2);/* stderr */
     }
+    log("Chdir to:" + string(getcwd(NULL, 0)), LVDE);
     int lfp = open(LOCKFile.c_str(), O_RDWR|O_CREAT|O_TRUNC, 0640);
 	if (lfp < 0) return 1;
 	if (lockf(lfp, F_TLOCK, 0) < 0)
@@ -248,9 +256,6 @@ int maind()
 	signal(SIGHUP,signal_handler);
 	signal(SIGINT,signal_handler);
 	signal(SIGTERM,signal_handler);
-    
-    chdir(WorkingDir.c_str());
-    log("Chdir to:" + string(getcwd(NULL, 0)), LVDE);
     
     loadLangs(LangFile);
     log("Server Started", LVIN);

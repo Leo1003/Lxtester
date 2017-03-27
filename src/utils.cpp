@@ -1,7 +1,7 @@
 #include "utils.h"
 using namespace std;
 
-loglevel lvlast = LVNU, lvset = LVDE;
+loglevel lvlast = LVNU, lvset = LVIN;
 void log(string mes, loglevel lvpre)
 {
     if(lvpre < lvset)
@@ -69,11 +69,10 @@ string getConfDir()
         if(stat(ss.str().c_str(), &st) != -1 && st.st_mode & S_IFREG)
         {
             log("Found config file: " + ss.str(), LVDE);
-            log("Set working directory: " + dir, LVDE);
             return dir;
         }
     }
-    log("Can't match path", LVER);
+    log("Config file not found", LVER);
     return "";
 }
 

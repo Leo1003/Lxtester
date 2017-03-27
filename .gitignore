@@ -3,5 +3,6 @@ bin/
 build/
 obj/
 *.layout
+*.log
 *.swp
 
