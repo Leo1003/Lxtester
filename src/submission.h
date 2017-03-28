@@ -31,6 +31,8 @@ public:
     void setStdin(std::string data);
     pid_t compile();
     pid_t execute();
+    
+    static std::string BOXDIR;
 private:
     language getLang(std::string lang);
     pid_t pid;

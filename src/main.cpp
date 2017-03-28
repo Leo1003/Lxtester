@@ -169,6 +169,7 @@ int main(int argc,char* argv[])
 
     ConfigLoader();
     DaemonMode = argdm; //prevent daemonmode config override argument
+    submission::BOXDIR = BoxDir;
     
     DetectDaemon();
 
@@ -191,6 +192,12 @@ int main(int argc,char* argv[])
                 return 1;
             }
             kill(daepid, 15);
+            log("Stopping...", LVIN);
+            while(DetectDaemon())
+            {
+                sleep(1);
+            }
+            log("Stopped.", LVIN);
             break;
         case DAE_RELOAD:
             if(!daerunning)
@@ -258,8 +265,8 @@ int maind()
 	signal(SIGTERM,signal_handler);
     
     loadLangs(LangFile);
-    log("Server Started", LVIN);
 	//ServerSocket s(); //TODO:Add config
+    log("Server Started", LVIN);
     while(!stopping)
     {
         
@@ -279,6 +286,7 @@ void signal_handler(int sig)
         case SIGINT:
             if(!DaemonMode)
             {
+                log("Received signal 2", LVIN);
                 log("Stopping lxtester server...", LVIN);
                 stopping = 1;
             }
@@ -293,6 +301,21 @@ void signal_handler(int sig)
 
 pid_t testWorkFlow(submission& sub)
 {
-    
+    pid_t pid = fork();
+    if(pid > 0)
+    {
+        pidmap[pid] = sub.getId();
+    }
+    else if(pid == 0)
+    {
+        sub.compile();
+        sub.execute();
+    }
+    else
+    {
+        log("Unable to fork.", LVFA);
+        log(strerror(errno));
+    }
+    return pid;
 }
 

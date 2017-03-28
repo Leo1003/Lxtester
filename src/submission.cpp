@@ -6,6 +6,7 @@ using boost::format;
  * class submission
  * -------------------------*/
 
+string submission::BOXDIR = "/tmp/box";
 submission::submission(int id, string lang) : submission(id, lang, "exe", "src") {}
 submission::submission(int id, string lang, string exe, string src)
 {
@@ -23,7 +24,11 @@ submission::submission(int id, string lang, string exe, string src)
     opt.metafile = "./meta/task" + to_string(id);
     opt.std_in = "stdin.txt";
     //create sandbox
-    boxInit(opt);
+    if(boxInit(opt) != 0) 
+    {
+        log("Unable to create box.", LVER);
+        log("Box id: " + to_string(opt.id));
+    }
 }
 
 submission::~submission()
@@ -93,22 +98,24 @@ pid_t submission::compile()
 {
     if (!lang.needComplie)
         return 0;
-    if (!created)
+    
+    ofstream code(BOXDIR + "/" + to_string(opt.id) + "/box/" + srcname);
+    if(!code)
     {
-        boxInit(opt);
-        created = true;
+        log("Failed to opened code file.", LVER);
+        log("Box id: " + to_string(opt.id));
+        return -1;
     }
+    code << this->code;
+    code.flush();
+    code.close();
     pid = boxExec(lang.complier + " " + lang.compargs, opt);
     return pid;
 }
 
 pid_t submission::execute()
 {
-    if (!created)
-    {
-        boxInit(opt);
-        created = true;
-    }
+
     pid = boxExec(lang.executer + " " + lang.execargs, opt);
     return pid;
 }
@@ -128,7 +135,7 @@ result::result (exec_opt option, meta metas)
     isKilled = metas.isKilled;
     try
     {
-        ifstream outf("/tmp/box/" + to_string(option.id) + "/box/stdout.log");
+        ifstream outf(submission::BOXDIR + "/" + to_string(option.id) + "/box/stdout.log");
         string s;
         while(getline(outf, s))
         {
@@ -143,7 +150,7 @@ result::result (exec_opt option, meta metas)
     }
     try
     {
-        ifstream errf("/tmp/box/" + to_string(option.id) + "/box/stderr.log");
+        ifstream errf(submission::BOXDIR + "/" + to_string(option.id) + "/box/stderr.log");
         string s;
         while(getline(errf, s))
         {
