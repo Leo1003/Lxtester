@@ -6,11 +6,19 @@
 #include "runner.h"
 #include "testsuite.h"
 
+enum RESULT_TYPE
+{
+    TYPE_OTHER,
+    TYPE_COMPILATION,
+    TYPE_EXECUTION
+};
+
 struct result
 {
     std::string std_out, std_err;
     int time, mem, exitcode, signal;
     bool isKilled;
+    RESULT_TYPE type;
     result();
     result(exec_opt option, meta metas);
 };
@@ -23,6 +31,7 @@ public:
     ~submission();
     int getId() const;
     pid_t getPID() const;
+    exec_opt getOption() const;
     result getResult() const;
     void setResult(result res);
     std::string getCode() const;

@@ -29,10 +29,11 @@ string BoxDir = "/tmp/box";
 string WorkingDir = ".";
 string LogFile = "/tmp/lxtester.log";
 string LangFile = "languages.conf";
-string ServerAddr;
+string ServerAddr = "localhost";
 short ServerPort = 80;
 string ServerToken;
 
+ServerSocket *s;
 //Record running submission
 map<pid_t, submission> pidmap;
 
@@ -270,14 +271,34 @@ int maind()
     signal(SIGCHLD, child_handler);
     
     loadLangs(LangFile);
-	ServerSocket s(ServerAddr, ServerPort, ServerToken);
-    s.connect();
+	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
+    while(!s->getConnected())
+    {
+        s->connect();
+        if(!s->getConnected())
+        {
+            log("Retry in 60 seconds...", LVIN);
+            int time = 60;
+            while(time--)
+            {
+                if(stopping) 
+                {
+                    log("Server stopped.", LVIN);
+                    exit(0);
+                }
+                sleep(1);
+            }
+            log("Reconnecting...", LVIN);
+        }
+    }
     log("Server Started", LVIN);
     while(!stopping)
     {
         submission sub;
-        if(s.getSubmission(sub))
+        if(s->getSubmission(sub))
         {
+            log("Received submission", LVDE);
+            log("submission id: " + to_string(sub.getId()));
             testWorkFlow(sub);
         }
         sleep(1);
@@ -316,7 +337,23 @@ void child_handler(int status)
     while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid)
     {
         submission sub = pidmap[chldpid];
-        //TODO:Uncomplete
+        if(WIFEXITED(chldsta))
+        {
+            meta mf(sub.getOption().metafile);
+            result res(sub.getOption(), mf);
+            if(WEXITSTATUS(chldsta))
+                res.type = TYPE_COMPILATION;
+            else
+                res.type = TYPE_EXECUTION;
+            sub.setResult(res);
+            s->sendResult(sub);
+            pidmap.erase(pidmap.find(chldpid));
+        }
+        else if(WIFSIGNALED(chldsta))
+        {
+            log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
+            log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
+        }
     }
 }
 
@@ -329,11 +366,14 @@ pid_t testWorkFlow(submission& sub)
     }
     else if(pid == 0)
     {
+        //set child environment
+        signal(SIGCHLD, SIG_DFL);
+        
         int compsta = sub.compile();
         if(compsta)
         {
             log("Compile Failed.", LVWA);
-            exit(-1);
+            exit(1);
         }
         sub.execute();
         exit(0);

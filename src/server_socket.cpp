@@ -81,6 +81,7 @@ void ServerSocket::sendResult(const submission& sub)
     object_message mess = *(static_pointer_cast<object_message>(object_message::create()));
     mess.insert("id", int_message::create(sub.getId()));
     result re = sub.getResult();
+    mess.insert("type", int_message::create(re.type));
     mess.insert("time", int_message::create(re.time));
     mess.insert("memory", int_message::create(re.mem));
     mess.insert("exitcode", int_message::create(re.exitcode));
@@ -114,14 +115,16 @@ void ServerSocket::on_failed()
 {
     ULOCK
     failed = true;
-    log("Socket failed", LVWA);
+    log("Failed to connect to server.", LVER);
     _cv.notify_all();
 }
 
 void ServerSocket::on_error(const sio::message::ptr& message)
 {
     ULOCK
+    failed = true;
     log("Socket Error", LVER);
+    _cv.notify_all();
 }
 
 void ServerSocket::on_closed(client::close_reason const& reason)

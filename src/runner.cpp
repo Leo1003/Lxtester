@@ -40,7 +40,7 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
         args.PB("--stdin=" + option.std_in);
     args.PB("--stdout=stdout.log");
     args.PB("--stderr=stderr.log");
-    args.PB("--stdin=" + option.metafile);
+    args.PB("--meta=" + option.metafile);
     args.PB("--");
     
     //split cmd string into vector<string>

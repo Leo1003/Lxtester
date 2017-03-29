@@ -15,7 +15,7 @@ submission::submission(int id, string lang, string exe, string src)
     this->srcname = src;
     this->lang = getLang(lang);
     
-    opt.id = id;
+    opt.id = id % 100;
     opt.fsize = 65536;
     opt.time = 30;
     opt.mem = 131072;
@@ -24,17 +24,24 @@ submission::submission(int id, string lang, string exe, string src)
     opt.metafile = "./meta/task" + to_string(id);
     opt.std_in = "stdin.txt";
     //create sandbox
-    if(boxInit(opt) != 0) 
+    if(boxInit(opt)) 
     {
         log("Unable to create box.", LVER);
         log("Box id: " + to_string(opt.id));
     }
+    else
+        log("Box id: " + to_string(opt.id) + " created.", LVDE);
 }
 
 submission::~submission()
 {
     //remove sandbox
-    boxDel(opt);
+    if(boxDel(opt))
+    {
+        log("Unable to remove box.", LVER);
+        log("Box id: " + to_string(opt.id));
+    }
+    log("Box id: " + to_string(opt.id) + " removed.", LVDE);
 }
 
 language submission::getLang(string lang)
@@ -82,6 +89,11 @@ int submission::getId() const
 pid_t submission::getPID() const
 {
     return pid;
+}
+
+exec_opt submission::getOption() const
+{
+    return opt;
 }
 
 result submission::getResult() const
@@ -144,6 +156,7 @@ result::result (exec_opt option, meta metas)
     exitcode = metas.exitcode;
     signal = metas.exitsig;
     isKilled = metas.isKilled;
+    type = TYPE_OTHER;
     try
     {
         ifstream outf(submission::BOXDIR + "/" + to_string(option.id) + "/box/stdout.log");
