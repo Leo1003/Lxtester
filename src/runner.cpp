@@ -22,7 +22,7 @@ int boxInit(exec_opt option)
         return 255;
 }
 
-pid_t boxExec(string cmd, exec_opt option, bool enableStdin)
+int boxExec(string cmd, exec_opt option, bool enableStdin)
 {
     vector<string> args;
     args.PB("./isolate"); //TODO:fix relative path
@@ -56,9 +56,12 @@ pid_t boxExec(string cmd, exec_opt option, bool enableStdin)
     parseVecstr(args, &argp);
     
     pid_t pid;
-    advFork(argp, pid, false);
+    int status = advFork(argp, pid);
 
-    return pid;
+    if(WIFEXITED(status))
+        return WEXITSTATUS(status);
+    else
+        return 255;
 }
 
 int boxDel(exec_opt option)

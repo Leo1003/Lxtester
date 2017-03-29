@@ -63,17 +63,18 @@ bool ServerSocket::getConnected() const
     return cli.opened();
 }
 
-submission ServerSocket::getSubmission()
+bool ServerSocket::getSubmission(submission*& sub)
 {
     ULOCK
     if(jobque.empty())
     {
-        submission emp(-1, "");
-        return emp;
+        sub = NULL;
+        return false;
     }
     submission s = jobque.front();
     jobque.pop();
-    return s;
+    *sub = s;
+    return true;
 }
 
 void ServerSocket::sendResult(const submission& sub)
@@ -154,20 +155,15 @@ void ServerSocket::on_closed(client::close_reason const& reason)
 void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_ack, message::list& ack_message)
 {
     ULOCK
-    //map<string, message::ptr> msg = mess->get_map();
     try
     {
         object_message msg = *(dynamic_pointer_cast<object_message>(mess));
         int id = msg["id"]->get_int();
         string l = msg["language"]->get_string();
-        submission sub(id, l);
-        if(msg["customname"]->get_bool())
-        {
-            string exefile = msg["exefile"]->get_string();
-            string srcfile = msg["srcfile"]->get_string();
-            //Override the original submission object.
-            sub = submission(id, l, exefile, srcfile);
-        }
+        string exefile = msg["exefile"]->get_string();
+        string srcfile = msg["srcfile"]->get_string();
+        submission sub(id, l, exefile, srcfile);
+
         sub.setCode(msg["code"]->get_string());
         jobque.push(sub);
     }

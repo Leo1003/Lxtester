@@ -36,7 +36,6 @@ public:
 private:
     language getLang(std::string lang);
     pid_t pid;
-    bool created;
     int id;
     std::string code, exename, srcname, stdin;
     language lang;

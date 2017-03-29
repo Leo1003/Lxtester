@@ -265,7 +265,8 @@ int maind()
 	signal(SIGTERM,signal_handler);
     
     loadLangs(LangFile);
-	//ServerSocket s(); //TODO:Add config
+	ServerSocket s(ServerAddr, ServerPort, ServerToken);
+    s.connect();
     log("Server Started", LVIN);
     while(!stopping)
     {
@@ -308,8 +309,14 @@ pid_t testWorkFlow(submission& sub)
     }
     else if(pid == 0)
     {
-        sub.compile();
+        int compsta = sub.compile();
+        if(compsta)
+        {
+            log("Compile Failed.", LVWA);
+            exit(-1);
+        }
         sub.execute();
+        exit(0);
     }
     else
     {

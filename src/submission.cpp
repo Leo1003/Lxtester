@@ -94,7 +94,7 @@ void submission::setResult(result res)
     this->res = res;
 }
 
-pid_t submission::compile()
+int submission::compile()
 {
     if (!lang.needComplie)
         return 0;
@@ -109,15 +109,26 @@ pid_t submission::compile()
     code << this->code;
     code.flush();
     code.close();
-    pid = boxExec(lang.complier + " " + lang.compargs, opt);
-    return pid;
+    
+    int status = boxExec(lang.complier + " " + lang.compargs, opt, false);
+    return status;
 }
 
-pid_t submission::execute()
+int submission::execute()
 {
+    ofstream infile(BOXDIR + "/" + to_string(opt.id) + "/box/" + opt.std_in);
+    if(!infile)
+    {
+        log("Failed to opened stdin file.", LVER);
+        log("Box id: " + to_string(opt.id));
+        return -1;
+    }
+    infile << this->opt.std_in;
+    infile.flush();
+    infile.close();
 
-    pid = boxExec(lang.executer + " " + lang.execargs, opt);
-    return pid;
+    int status = boxExec(lang.executer + " " + lang.execargs, opt);
+    return status;
 }
 
 /*--------------------------

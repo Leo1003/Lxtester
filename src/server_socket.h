@@ -23,7 +23,7 @@ public:
     bool getConnected() const;
     int connect();
     int disconnect();
-    submission getSubmission();
+    bool getSubmission(submission*& sub);
     void sendResult(const submission& sub);
 private:
     sio::client cli;
