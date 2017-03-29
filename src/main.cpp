@@ -33,8 +33,12 @@ string ServerAddr;
 short ServerPort = 80;
 string ServerToken;
 
+//Record running submission
+map<pid_t, submission> pidmap;
+
 int maind();
 void signal_handler(int);
+void child_handler(int);
 pid_t testWorkFlow(submission& sub);
 
 void ConfigLoader()
@@ -257,12 +261,13 @@ int maind()
     pidf << getpid() << endl;
     pidf.close();
 
-    signal(SIGTSTP,SIG_IGN);
-	signal(SIGTTOU,SIG_IGN);
-	signal(SIGTTIN,SIG_IGN);
-	signal(SIGHUP,signal_handler);
-	signal(SIGINT,signal_handler);
-	signal(SIGTERM,signal_handler);
+    signal(SIGTSTP, SIG_IGN);
+	signal(SIGTTOU, SIG_IGN);
+	signal(SIGTTIN, SIG_IGN);
+	signal(SIGHUP, signal_handler);
+	signal(SIGINT, signal_handler);
+	signal(SIGTERM, signal_handler);
+    signal(SIGCHLD, child_handler);
     
     loadLangs(LangFile);
 	ServerSocket s(ServerAddr, ServerPort, ServerToken);
@@ -270,7 +275,11 @@ int maind()
     log("Server Started", LVIN);
     while(!stopping)
     {
-        
+        submission sub;
+        if(s.getSubmission(sub))
+        {
+            testWorkFlow(sub);
+        }
         sleep(1);
     }
     log("Server stopped.", LVIN);
@@ -300,12 +309,23 @@ void signal_handler(int sig)
     return;
 }
 
+void child_handler(int status)
+{
+    int chldsta;
+    pid_t chldpid;
+    while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid)
+    {
+        submission sub = pidmap[chldpid];
+        //TODO:Uncomplete
+    }
+}
+
 pid_t testWorkFlow(submission& sub)
 {
     pid_t pid = fork();
     if(pid > 0)
     {
-        pidmap[pid] = sub.getId();
+        pidmap[pid] = sub;
     }
     else if(pid == 0)
     {

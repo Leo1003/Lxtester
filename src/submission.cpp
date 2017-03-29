@@ -7,7 +7,7 @@ using boost::format;
  * -------------------------*/
 
 string submission::BOXDIR = "/tmp/box";
-submission::submission(int id, string lang) : submission(id, lang, "exe", "src") {}
+submission::submission() {}
 submission::submission(int id, string lang, string exe, string src)
 {
     this->id = id;

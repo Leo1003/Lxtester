@@ -2,7 +2,6 @@
 using namespace std;
 
 std::map<std::string, language> langs;
-std::map<pid_t, int> pidmap;
 
 void loadLangs(std::string confpath)
 {

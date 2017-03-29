@@ -13,7 +13,6 @@ struct language
 };
 
 extern std::map<std::string, language> langs;
-extern std::map<pid_t, int> pidmap;
 
 void loadLangs(std::string confpath);
 

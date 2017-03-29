@@ -63,17 +63,15 @@ bool ServerSocket::getConnected() const
     return cli.opened();
 }
 
-bool ServerSocket::getSubmission(submission*& sub)
+bool ServerSocket::getSubmission(submission& sub)
 {
     ULOCK
     if(jobque.empty())
     {
-        sub = NULL;
         return false;
     }
-    submission s = jobque.front();
+    sub = jobque.front();
     jobque.pop();
-    *sub = s;
     return true;
 }
 

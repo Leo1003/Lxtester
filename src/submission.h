@@ -18,7 +18,7 @@ struct result
 class submission
 {
 public:
-    submission(int id, std::string lang);
+    submission();
     submission(int id, std::string lang, std::string exe, std::string src);
     ~submission();
     int getId() const;
