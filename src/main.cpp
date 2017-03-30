@@ -339,21 +339,29 @@ void child_handler(int status)
         submission sub = pidmap[chldpid];
         if(WIFEXITED(chldsta))
         {
-            meta mf(sub.getOption().metafile);
-            result res(sub.getOption(), mf);
-            if(WEXITSTATUS(chldsta))
-                res.type = TYPE_COMPILATION;
-            else
-                res.type = TYPE_EXECUTION;
+            RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
+            meta mf;
+            result res;
+            switch(resty)
+            {
+                case TYPE_COMPILATION:
+                case TYPE_EXECUTION:
+                    mf = meta(sub.getOption().metafile);
+                    res = result(sub.getOption(), mf);
+                    res.type = resty;
+                    break;
+            }
             sub.setResult(res);
-            s->sendResult(sub);
-            pidmap.erase(pidmap.find(chldpid));
         }
         else if(WIFSIGNALED(chldsta))
         {
+            result res;
+            sub.setResult(res);
             log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
             log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
         }
+        s->sendResult(sub);
+        pidmap.erase(pidmap.find(chldpid));
     }
 }
 
@@ -368,7 +376,17 @@ pid_t testWorkFlow(submission& sub)
     {
         //set child environment
         signal(SIGCHLD, SIG_DFL);
-        
+        //create sandbox
+        if(boxInit(sub.getOption())) 
+        {
+            log("Unable to create box.", LVER);
+            log("Box id: " + to_string(sub.getOption().id));
+        }
+        else
+        {
+            log("Box id: " + to_string(sub.getOption().id) + " created.", LVDE);
+            exit(2);
+        }
         int compsta = sub.compile();
         if(compsta)
         {
@@ -376,6 +394,13 @@ pid_t testWorkFlow(submission& sub)
             exit(1);
         }
         sub.execute();
+        //remove sandbox
+        if(boxDel(sub.getOption()))
+        {
+            log("Unable to remove box.", LVER);
+            log("Box id: " + to_string(sub.getOption().id));
+        }
+        log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
         exit(0);
     }
     else

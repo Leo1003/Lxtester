@@ -8,9 +8,9 @@
 
 enum RESULT_TYPE
 {
-    TYPE_OTHER,
-    TYPE_COMPILATION,
-    TYPE_EXECUTION
+    TYPE_EXECUTION = 0,
+    TYPE_COMPILATION = 1,
+    TYPE_FAILED = 2
 };
 
 struct result
@@ -28,7 +28,6 @@ class submission
 public:
     submission();
     submission(int id, std::string lang, std::string exe, std::string src);
-    ~submission();
     int getId() const;
     pid_t getPID() const;
     exec_opt getOption() const;
