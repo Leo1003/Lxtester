@@ -28,7 +28,7 @@ int ServerSocket::connect()
         return 0;
     map<string,string> query;
     query["passtoken"] = token;
-    cli.connect(addr,query);
+    cli.connect(addr, map<string,string>(), query);
     resetmt();
     ULOCK
     if(!unlocked && !failed)
@@ -78,7 +78,10 @@ bool ServerSocket::getSubmission(submission& sub)
 void ServerSocket::sendResult(const submission& sub)
 {
     ULOCK
+    log("Creating object message", LVDE);
     object_message mess = *(static_pointer_cast<object_message>(object_message::create()));
+    //TODO:Can't do like this.
+    log("Converted object message", LVDE);
     mess.insert("id", int_message::create(sub.getId()));
     result re = sub.getResult();
     mess.insert("type", int_message::create(re.type));
@@ -89,11 +92,14 @@ void ServerSocket::sendResult(const submission& sub)
     mess.insert("killed", bool_message::create(re.isKilled));
     mess.insert("output", string_message::create(re.std_out));
     mess.insert("error", string_message::create(re.std_err));
+    log("Inserted result message", LVDE);
+    log("Emitting", LVDE);
     s->emit("Result", message::ptr(&mess));
     resetmt();
     if(!unlocked && !failed)
         _cv.wait(_ul);
     _ul.unlock();
+    log("CallBack received.", LVDE);
 }
 
 
@@ -116,6 +122,7 @@ void ServerSocket::on_failed()
     ULOCK
     failed = true;
     log("Failed to connect to server.", LVER);
+    //TODO:Lost connection event occured here!
     _cv.notify_all();
 }
 
@@ -124,6 +131,7 @@ void ServerSocket::on_error(const sio::message::ptr& message)
     ULOCK
     failed = true;
     log("Socket Error", LVER);
+    //TODO:Authentication error event occured here!
     _cv.notify_all();
 }
 

@@ -85,6 +85,7 @@ config::config(std::string path) : config_section()
 {
     try
     {
+        //TODO:Check unexist configfile
         ifstream conf(path);
         log("Loading config: " + path, LVDE);
         int linec = 0;
@@ -97,6 +98,7 @@ config::config(std::string path) : config_section()
                 continue;
             if(regex_match(buf, sm, reg_section))
             {
+                log("Loading section: " + string(sm[1]), LVDE);
                 config_section cs(sm[1]);
                 sec[sm[1]] = cs;
                 seclist.push_back(sm[1]);

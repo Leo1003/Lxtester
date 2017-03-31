@@ -14,6 +14,10 @@ submission::submission(int id, string lang, string exe, string src)
     this->exename = exe;
     this->srcname = src;
     this->lang = getLang(lang);
+    log(this->lang.complier, LVDE);
+    log(this->lang.compargs);
+    log(this->lang.executer);
+    log(this->lang.execargs);
     
     opt.id = id % 100;
     opt.fsize = 65536;
@@ -27,13 +31,18 @@ submission::submission(int id, string lang, string exe, string src)
 
 language submission::getLang(string lang)
 {
-    language l = langs[lang];
+    log(lang, LVDE);
+    language l = langs.at(lang);
     try
     {
         l.complier = (format(l.complier) % srcname % exename).str();
+        log("OK1", LVDE);
         l.compargs = (format(l.compargs) % srcname % exename).str();
+        log("OK2", LVDE);
         l.executer = (format(l.executer) % srcname % exename).str();
+        log("OK3", LVDE);
         l.execargs = (format(l.execargs) % srcname % exename).str();
+        log("OK4", LVDE);
     }
     catch (exception ex)
     {

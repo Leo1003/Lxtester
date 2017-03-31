@@ -18,6 +18,7 @@ void loadLangs(std::string confpath)
             l.executer = lconf.getString("Executer");
             l.execargs = lconf.getString("ExecuteArgs");
             langs[name] = l;
+            log("Found language: " + name, LVDE);
         });
     }
     catch (exception ex)

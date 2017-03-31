@@ -271,6 +271,7 @@ int maind()
     signal(SIGCHLD, child_handler);
     
     loadLangs(LangFile);
+    log("Daemon PID: " + to_string(getpid()), LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
     while(!s->getConnected())
     {
@@ -360,7 +361,9 @@ void child_handler(int status)
             log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
             log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
         }
+        log("Sending result.", LVDE);
         s->sendResult(sub);
+        log("Successfully sent result.", LVDE);
         pidmap.erase(pidmap.find(chldpid));
     }
 }
