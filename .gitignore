@@ -5,4 +5,5 @@ obj/
 *.layout
 *.log
 *.swp
+isolate.conf
 

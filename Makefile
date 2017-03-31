@@ -16,6 +16,7 @@ build: mkdir ./bin/lxtester ./bin/isolate
 ./bin/isolate: 
 	$(MAKE) -C $(ISODIR)
 	cp ./isolate/isolate ./bin/isolate
+	cp ./isolate/default.cf ./isolate.conf
 
 ./build/main.o: 
 ./build/config.o: 
@@ -34,6 +35,7 @@ mkdir:
 clean:
 	-rm -rf ./build/*
 	-rm -f ./bin/lxtester
+	-rm ./isolate.conf
 	$(MAKE) -C $(ISODIR) clean
 
 ./build/%.o : ./src/%.cpp
