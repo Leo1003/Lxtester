@@ -29,6 +29,9 @@ bool isDir(std::string path);
 int tryParse(std::string str, int def = 0);
 long long tryParsell(std::string str, long long def = 0);
 
-void parseVecstr(std::vector<std::string> vec, char *** output);
+std::string trim(const std::string& str);
+
+char** parseVecstr(std::vector<std::string> vec);
+void delCStrings(char** cstrings);
 
 #endif // UTILS_H

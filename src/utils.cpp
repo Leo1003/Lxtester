@@ -128,12 +128,37 @@ long long tryParsell(string str, long long def)
     }
 }
 
-void parseVecstr(vector<string> vec, char *** output)
+string trim(const string& str)
 {
-    vector<char *> v(vec.size() + 1);    // one extra for the null
-    for (size_t i = 0; i < vec.size(); i++)
+    size_t first = str.find_first_not_of(' ');
+    if (string::npos == first)
     {
-        v[i] = &vec[i][0];
+        return str;
     }
-    *output = v.data();
+    size_t last = str.find_last_not_of(' ');
+    return str.substr(first, (last - first + 1));
 }
+
+char** parseVecstr(vector<string> vec)
+{
+    char** cstrings = new char*[vec.size() + 1];
+    for(size_t i = 0; i < vec.size(); ++i)
+    {
+        cstrings[i] = new char[vec[i].size() + 1];
+        std::strcpy(cstrings[i], vec[i].c_str());
+    }
+    cstrings[vec.size()] = NULL;
+    return cstrings;
+}
+
+void delCStrings(char ** cstrings)
+{
+    int i = -1;
+    do
+    {
+        i++;
+        delete[] cstrings[i];
+    } while(cstrings[i] != NULL);
+    delete[] cstrings;
+}
+

@@ -35,6 +35,7 @@ language submission::getLang(string lang)
     language l = langs.at(lang);
     try
     {
+        //TODO:Format seems to have problems.
         l.complier = (format(l.complier) % srcname % exename).str();
         log("OK1", LVDE);
         l.compargs = (format(l.compargs) % srcname % exename).str();

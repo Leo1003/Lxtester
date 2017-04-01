@@ -9,12 +9,13 @@ int boxInit(exec_opt option)
     args.PB("--init");
     args.PB("--cg");
     args.PB("--box-id=" + to_string(option.id));
-
-    char** argp;
-    parseVecstr(args, &argp);
+    
+    char** argp = parseVecstr(args);
 
     pid_t pid;
     int status = advFork(argp, pid);
+    
+    delCStrings(argp);
     
     if(WIFEXITED(status))
         return WEXITSTATUS(status);
@@ -44,19 +45,22 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
     args.PB("--");
     
     //split cmd string into vector<string>
+    cmd = trim(cmd);
+    log("SandboxExec: CMD = \"" + cmd + "\"", LVDE);
     stringstream ss(cmd);
     string tmp;
-    while(ss)
+    while(!ss.eof())
     {
         ss >> tmp;
         args.PB(tmp);
     }
     
-    char** argp;
-    parseVecstr(args, &argp);
+    char** argp = parseVecstr(args);
     
     pid_t pid;
     int status = advFork(argp, pid);
+    
+    delCStrings(argp);
 
     if(WIFEXITED(status))
         return WEXITSTATUS(status);
@@ -72,11 +76,12 @@ int boxDel(exec_opt option)
     args.PB("--cg");
     args.PB("--box-id=" + to_string(option.id));
 
-    char** argp;
-    parseVecstr(args, &argp);
+    char** argp = parseVecstr(args);
 
     pid_t pid;
     int status = advFork(argp, pid);
+    
+    delCStrings(argp);
     
     if(WIFEXITED(status))
         return WEXITSTATUS(status);
@@ -86,6 +91,20 @@ int boxDel(exec_opt option)
 
 int advFork(char** argp, pid_t& pid, bool wait)
 {
+    if(getLevel() == LVDE)
+    {
+        stringstream ss;
+        log("Advfork: Exec command:", LVDE);
+        ss << "[";
+        int i = 0;
+        while(argp[i] != NULL)
+        {
+            ss << argp[i] << ", ";
+            i++;
+        }
+        ss << "]" << endl;
+        log(ss.str());
+    }
     int status = 0;
     pid = fork();
     if(pid == 0)
@@ -105,6 +124,8 @@ int advFork(char** argp, pid_t& pid, bool wait)
     else
     {
         //failed
+        log("Advfork Failed.", LVER);
+        log(strerror(errno));
         status = -1;
     }
     return status;
