@@ -364,6 +364,14 @@ void child_handler(int status)
                 log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
                 log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
             }
+            //remove sandbox
+            if(boxDel(sub.getOption()))
+            {
+                log("Unable to remove box.", LVER);
+                log("Box id: " + to_string(sub.getOption().id));
+            }
+            log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
+            //sendResult
             log("Sending result.", LVDE);
             s->sendResult(sub);
             log("Successfully sent result.", LVDE);
@@ -406,14 +414,8 @@ pid_t testWorkFlow(submission& sub)
             log("Compile Failed.", LVWA);
             state = 1;
         }
-        sub.execute();
-        //remove sandbox
-        if(boxDel(sub.getOption()))
-        {
-            log("Unable to remove box.", LVER);
-            log("Box id: " + to_string(sub.getOption().id));
-        }
-        log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
+        else
+            sub.execute();
         exit(state);
     }
     else

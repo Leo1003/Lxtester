@@ -1,5 +1,6 @@
 #include "submission.h"
 using namespace std;
+using namespace boost::io;
 using boost::format;
 
 /*--------------------------
@@ -35,21 +36,34 @@ language submission::getLang(string lang)
     language l = langs.at(lang);
     try
     {
-        //TODO:Format seems to have problems.
-        l.complier = (format(l.complier) % srcname % exename).str();
-        log("OK1", LVDE);
-        l.compargs = (format(l.compargs) % srcname % exename).str();
-        log("OK2", LVDE);
-        l.executer = (format(l.executer) % srcname % exename).str();
-        log("OK3", LVDE);
-        l.execargs = (format(l.execargs) % srcname % exename).str();
-        log("OK4", LVDE);
+        l.complier = formatCMD(l.complier);
+        l.compargs = formatCMD(l.compargs);
+        l.executer = formatCMD(l.executer);
+        l.execargs = formatCMD(l.execargs);
     }
     catch (exception ex)
     {
         log("Error when parsing language format string", LVER);
     }
     return l;
+}
+
+std::string submission::formatCMD(std::string fmstr)
+{
+    string str = fmstr;
+    try
+    {
+        format fm(fmstr);
+        fm.exceptions(all_error_bits ^ (too_many_args_bit | too_few_args_bit));
+        str = (fm % srcname % exename).str();
+    }
+    catch(exception ex)
+    {
+        log("Error when parsing language format string: ", LVER);
+        log(fmstr);
+        log(ex.what());
+    }
+    return str;
 }
 
 string submission::getCode() const
@@ -113,7 +127,16 @@ int submission::compile()
     code.flush();
     code.close();
     
-    int status = boxExec(lang.complier + " " + lang.compargs, opt, false);
+    exec_opt compile_opt;
+    compile_opt.id = opt.id;
+    compile_opt.mem = opt.mem;
+    compile_opt.fsize = opt.fsize;
+    compile_opt.metafile = opt.metafile;
+    compile_opt.processes = 10;
+    compile_opt.stack = 0;
+    compile_opt.time = opt.time;
+    
+    int status = boxExec(lang.complier + " " + lang.compargs, compile_opt, false);
     return status;
 }
 
@@ -145,7 +168,7 @@ result::result()
 
 result::result (exec_opt option, meta metas)
 {
-    time = metas.time;
+    time = metas.time_wall;
     mem = metas.max_rss;
     exitcode = metas.exitcode;
     signal = metas.exitsig;

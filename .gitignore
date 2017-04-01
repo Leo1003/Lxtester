@@ -1,6 +1,7 @@
 .kdev4/
 bin/
 build/
+meta/
 obj/
 *.layout
 *.log

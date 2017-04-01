@@ -43,6 +43,7 @@ public:
     static std::string BOXDIR;
 private:
     language getLang(std::string lang);
+    std::string formatCMD(std::string fmstr);
     pid_t pid;
     int id;
     std::string code, exename, srcname, stdin;

@@ -30,9 +30,8 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
     args.PB("--run");
     args.PB("--cg");
     args.PB("--box-id=" + to_string(option.id));
-    double timeout = option.time / 1000.0;
-    args.PB("--time=" + to_string(timeout));
-    args.PB("--wall-time=" + to_string(timeout));
+    args.PB("--time=" + to_string(option.time));
+    args.PB("--wall-time=" + to_string(option.time));
     args.PB("--mem=" + to_string(option.mem));
     args.PB("--processes=" + to_string(option.processes));
     args.PB("--stack=" + to_string(option.stack));
@@ -42,6 +41,7 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
     args.PB("--stdout=stdout.log");
     args.PB("--stderr=stderr.log");
     args.PB("--meta=" + option.metafile);
+    args.PB("--full-env");
     args.PB("--");
     
     //split cmd string into vector<string>
