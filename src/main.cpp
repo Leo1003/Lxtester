@@ -10,28 +10,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "config.h"
+#include "global.h"
 #include "server_socket.h"
 #include "submission.h"
 #include "utils.h"
 using namespace std;
 
-bool daerunning;
-int daepid;
-
-/*--------------------
- * config variables
- * -------------------*/
 config mainconf;
-bool DaemonMode = true;
-string PIDFile = "/tmp/lxtester.pid";
-string LOCKFile = "/tmp/lxtester.lock";
-string BoxDir = "/tmp/box";
-string WorkingDir = ".";
-string LogFile = "/tmp/lxtester.log";
-string LangFile = "languages.conf";
-string ServerAddr = "localhost";
-short ServerPort = 80;
-string ServerToken;
 
 ServerSocket *s;
 //Record running submission
@@ -53,7 +38,7 @@ void ConfigLoader()
     }
     try
     {
-        config mainconf(confpath);
+        mainconf = config(confpath);
     }
     catch(exception ex)
     {
@@ -197,7 +182,6 @@ int main(int argc,char* argv[])
 
     ConfigLoader();
     DaemonMode = argdm; //prevent daemonmode config override argument
-    submission::BOXDIR = BoxDir;
     
     DetectDaemon();
 
@@ -260,9 +244,6 @@ int main(int argc,char* argv[])
     }
 }
 
-bool stopping = 0;
-const mode_t newfile = 0644;
-
 int maind()
 {
     umask(0022);
@@ -280,7 +261,7 @@ int maind()
         bool failed = false;
         if(open("/dev/null", O_RDWR) == -1)/* open stdin */
             failed = true;
-        if(open(LogFile.c_str(), O_RDWR|O_CREAT|O_APPEND, newfile) == -1)/* stdout */
+        if(open(LogFile.c_str(), O_RDWR|O_CREAT|O_APPEND, 0644) == -1)/* stdout */
             failed = true;
         if(dup2(1, 2) == -1)/* stderr */
             failed = true;
@@ -308,6 +289,15 @@ int maind()
     }
     pidf << getpid() << endl;
     pidf.close();
+    if(!isDir("./meta"))
+    {
+        if(mkdir("./meta", 0755) == -1)
+        {
+            log("Failed to mkdir \"./meta\".", LVFA);
+            log(strerror(errno));
+            exit(1);
+        }
+    }
 
     signal(SIGTSTP, SIG_IGN);
 	signal(SIGTTOU, SIG_IGN);

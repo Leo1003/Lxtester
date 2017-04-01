@@ -2,6 +2,7 @@
 #define SUBMISSION_H
 #include <string>
 #include <boost/format.hpp>
+#include "global.h"
 #include "utils.h"
 #include "runner.h"
 #include "testsuite.h"
@@ -39,8 +40,6 @@ public:
     void setStdin(std::string data);
     pid_t compile();
     pid_t execute();
-    
-    static std::string BOXDIR;
 private:
     language getLang(std::string lang);
     std::string formatCMD(std::string fmstr);

@@ -8,6 +8,7 @@ ServerSocket::ServerSocket(string host, short port, string token)
     ss<<"wss://"<<host<<":"<<port;
     this->addr = ss.str();
     this->token = token;
+    log("Server address is: " + addr, LVDE);
     resetmt();
     cli.set_reconnect_attempts(3);
     cli.set_reconnect_delay(2000);

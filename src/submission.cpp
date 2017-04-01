@@ -7,7 +7,6 @@ using boost::format;
  * class submission
  * -------------------------*/
 
-string submission::BOXDIR = "/tmp/box";
 submission::submission() {}
 submission::submission(int id, string lang, string exe, string src)
 {
@@ -15,10 +14,6 @@ submission::submission(int id, string lang, string exe, string src)
     this->exename = exe;
     this->srcname = src;
     this->lang = getLang(lang);
-    log(this->lang.complier, LVDE);
-    log(this->lang.compargs);
-    log(this->lang.executer);
-    log(this->lang.execargs);
     
     opt.id = id % 100;
     opt.fsize = 65536;
@@ -116,7 +111,7 @@ int submission::compile()
     if (!lang.needComplie)
         return 0;
     
-    ofstream code(BOXDIR + "/" + to_string(opt.id) + "/box/" + srcname);
+    ofstream code(BoxDir + "/" + to_string(opt.id) + "/box/" + srcname);
     if(!code)
     {
         log("Failed to opened code file.", LVER);
@@ -142,7 +137,7 @@ int submission::compile()
 
 int submission::execute()
 {
-    ofstream infile(BOXDIR + "/" + to_string(opt.id) + "/box/" + opt.std_in);
+    ofstream infile(BoxDir + "/" + to_string(opt.id) + "/box/" + opt.std_in);
     if(!infile)
     {
         log("Failed to opened stdin file.", LVER);
@@ -175,7 +170,7 @@ result::result (exec_opt option, meta metas)
     isKilled = metas.isKilled;
     try
     {
-        ifstream outf(submission::BOXDIR + "/" + to_string(option.id) + "/box/stdout.log");
+        ifstream outf(BoxDir + "/" + to_string(option.id) + "/box/stdout.log");
         string s;
         while(getline(outf, s))
         {
@@ -190,7 +185,7 @@ result::result (exec_opt option, meta metas)
     }
     try
     {
-        ifstream errf(submission::BOXDIR + "/" + to_string(option.id) + "/box/stderr.log");
+        ifstream errf(BoxDir + "/" + to_string(option.id) + "/box/stderr.log");
         string s;
         while(getline(errf, s))
         {

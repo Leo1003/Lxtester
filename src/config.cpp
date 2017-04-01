@@ -85,7 +85,6 @@ config::config(std::string path) : config_section()
 {
     try
     {
-        //TODO:Check unexist configfile
         ifstream conf(path);
         if(conf.fail())
         {
