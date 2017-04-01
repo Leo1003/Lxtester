@@ -87,6 +87,10 @@ config::config(std::string path) : config_section()
     {
         //TODO:Check unexist configfile
         ifstream conf(path);
+        if(conf.fail())
+        {
+            throw ifstream::failure(strerror(errno));
+        }
         log("Loading config: " + path, LVDE);
         int linec = 0;
         string buf, secpointer = "_";
@@ -120,7 +124,7 @@ config::config(std::string path) : config_section()
     }
     catch(exception ex)
     {
-        log("Something bad happened while parsing config file: " + path, LVER);
+        log("Something bad happened while parsing config file: " + path, LVFA);
         log(ex.what());
         throw ex;
     }

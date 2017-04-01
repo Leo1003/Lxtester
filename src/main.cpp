@@ -51,7 +51,16 @@ void ConfigLoader()
         log(strerror(errno));
         exit(1);
     }
-    config mainconf(confpath);
+    try
+    {
+        config mainconf(confpath);
+    }
+    catch(exception ex)
+    {
+        log("Failed to load main config.", LVFA);
+        log(ex.what());
+        exit(1);
+    }
     if(mainconf.isExist("DaemonMode"))
         DaemonMode = mainconf.getBool("DaemonMode");
     if(mainconf.isExist("PIDFile"))
@@ -98,10 +107,11 @@ bool DetectDaemon()
     return daerunning;
 }
 
-const char optstring[] = "DdhrRs";
+const char optstring[] = "DdhKrRs";
 
 const struct option longopts[] = {
     {"daemon",      no_argument,        NULL,'d'},
+    {"kill",        no_argument,        NULL,'K'},
     {"no-daemon",   no_argument,        NULL,'D'},
     {"help",        no_argument,        NULL,'h'},
     {"reload",      no_argument,        NULL,'r'},
@@ -116,13 +126,22 @@ enum OptType
     DAE_START,
     DAE_STOP,
     DAE_RELOAD,
-    DAE_RESTART
+    DAE_RESTART,
+    DAE_KILL
 };
 
 void usage(bool wa = false)
 {
-    //add usage
-    if(wa)exit(255);
+    printf("Usage: lxtester [option]\n");
+    printf("\n");
+    printf("Options:\n");
+    printf("\t--daemon, -d \t\tRun and daemonize the program.\n");
+    printf("\t--no-daemon, -D \tRun but not daemonize the program.\n");
+    printf("\t--stop, -s \t\tStop the background daemon.\n");
+    printf("\t--restart, -R \t\tRestart the background daemon.\n");
+    printf("\t--kill, -K \t\tKill the background daemon directly without waiting it to shutdown.\n");
+    printf("\t--help, -h \t\tShow this help.\n");
+    if(wa) exit(3);
     else exit(0);
 }
 
@@ -157,6 +176,10 @@ int main(int argc,char* argv[])
             case 's':
                 if(ty)usage(true);
                 ty = DAE_STOP;
+                break;
+            case 'K':
+                if(ty)usage(true);
+                ty = DAE_KILL;
                 break;
             case '?':
                 usage(true);
@@ -225,24 +248,48 @@ int main(int argc,char* argv[])
             }
             daemon(1,0);
             return maind();
+        case DAE_KILL:
+            if(!daerunning)
+            {
+                log("There is no process running.", LVER);
+                return 1;
+            }
+            kill(daepid, 9);
+            log("Killed.", LVIN);
+            break;
     }
 }
 
 bool stopping = 0;
-mode_t newfile = 0644;
+const mode_t newfile = 0644;
 
 int maind()
 {
     umask(0022);
     
-    chdir(WorkingDir.c_str());
+    if(chdir(WorkingDir.c_str()) == -1)
+    {
+        log("Failed to chdir", LVFA);
+        log(strerror(errno));
+        exit(1);
+    }
     if(DaemonMode)
     {
         for(int i = getdtablesize();i >= 0;--i)
             close(i);
-        open("/dev/null",O_RDWR);/* open stdin */
-        open(LogFile.c_str(), O_RDWR|O_CREAT|O_APPEND, newfile);/* stdout */
-        dup2(1, 2);/* stderr */
+        bool failed = false;
+        if(open("/dev/null", O_RDWR) == -1)/* open stdin */
+            failed = true;
+        if(open(LogFile.c_str(), O_RDWR|O_CREAT|O_APPEND, newfile) == -1)/* stdout */
+            failed = true;
+        if(dup2(1, 2) == -1)/* stderr */
+            failed = true;
+        if(failed)
+        {
+            log("Failed to redirect IO.", LVFA);
+            log(strerror(errno));
+            exit(1);
+        }
     }
     log("Chdir to:" + string(getcwd(NULL, 0)), LVDE);
     int lfp = open(LOCKFile.c_str(), O_RDWR|O_CREAT|O_TRUNC, 0640);
@@ -270,7 +317,17 @@ int maind()
 	signal(SIGTERM, signal_handler);
     signal(SIGCHLD, child_handler);
     
-    loadLangs(LangFile);
+    try
+    {
+        loadLangs(LangFile);
+    }
+    catch(exception ex)
+    {
+        log("Failed to load languages config.", LVFA);
+        log(ex.what());
+        log("Abort!", LVFA);
+        exit(1);
+    }
     log("Daemon PID: " + to_string(getpid()), LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
     while(!s->getConnected())
@@ -396,6 +453,9 @@ pid_t testWorkFlow(submission& sub)
     {
         //set child environment
         signal(SIGCHLD, SIG_DFL);
+        signal(SIGHUP, SIG_DFL);
+        signal(SIGINT, SIG_DFL);
+        signal(SIGTERM, SIG_DFL);
         //create sandbox
         if(boxInit(sub.getOption())) 
         {
