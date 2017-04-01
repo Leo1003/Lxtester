@@ -16,14 +16,14 @@ void log(string mes, loglevel lvpre)
         case LVWA : lvmes = "[WARN] "; break;
         case LVIN : lvmes = "[INFO] "; break;
         case LVDE : lvmes = "[DEBUG]"; break;
-        case LVNU : lvmes = "       "; break; 
+        case LVNU : lvmes = "       "; break;
     }
     if(lvpre != LVNU)
         lvlast = lvpre;
     string buf;
     stringstream ss(mes);
     while(getline(ss, buf))
-        cerr << lvmes << buf << endl;
+        cerr << lvmes << " " << buf << endl;
 }
 
 loglevel getLevel()
