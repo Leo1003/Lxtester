@@ -79,22 +79,21 @@ void ServerSocket::sendResult(const submission& sub)
 {
     ULOCK
     log("Creating object message", LVDE);
-    object_message mess = *(static_pointer_cast<object_message>(object_message::create()));
-    //TODO:Can't do like this.
+    shared_ptr<object_message> mess = static_pointer_cast<object_message>(object_message::create());
     log("Converted object message", LVDE);
-    mess.insert("id", int_message::create(sub.getId()));
+    mess->insert("id", int_message::create(sub.getId()));
     result re = sub.getResult();
-    mess.insert("type", int_message::create(re.type));
-    mess.insert("time", int_message::create(re.time));
-    mess.insert("memory", int_message::create(re.mem));
-    mess.insert("exitcode", int_message::create(re.exitcode));
-    mess.insert("signal", int_message::create(re.signal));
-    mess.insert("killed", bool_message::create(re.isKilled));
-    mess.insert("output", string_message::create(re.std_out));
-    mess.insert("error", string_message::create(re.std_err));
+    mess->insert("type", int_message::create(re.type));
+    mess->insert("time", int_message::create(re.time));
+    mess->insert("memory", int_message::create(re.mem));
+    mess->insert("exitcode", int_message::create(re.exitcode));
+    mess->insert("signal", int_message::create(re.signal));
+    mess->insert("killed", bool_message::create(re.isKilled));
+    mess->insert("output", string_message::create(re.std_out));
+    mess->insert("error", string_message::create(re.std_err));
     log("Inserted result message", LVDE);
     log("Emitting", LVDE);
-    s->emit("Result", message::ptr(&mess));
+    s->emit("Result", static_pointer_cast<message>(mess));
     resetmt();
     if(!unlocked && !failed)
         _cv.wait(_ul);
@@ -130,7 +129,8 @@ void ServerSocket::on_error(const sio::message::ptr& message)
 {
     ULOCK
     failed = true;
-    log("Socket Error", LVER);
+    log("Authentication error", LVFA);
+    log("Can't connect to server.");
     //TODO:Authentication error event occured here!
     _cv.notify_all();
 }

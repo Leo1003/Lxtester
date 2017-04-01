@@ -335,36 +335,45 @@ void child_handler(int status)
 {
     int chldsta;
     pid_t chldpid;
-    while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid)
+    while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0)
     {
-        submission sub = pidmap[chldpid];
-        if(WIFEXITED(chldsta))
+        log("Child process terminated, PID: " + to_string(chldpid), LVDE);
+        try
         {
-            RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
-            meta mf;
-            result res;
-            switch(resty)
+            submission sub = pidmap[chldpid];
+            if(WIFEXITED(chldsta))
             {
-                case TYPE_COMPILATION:
-                case TYPE_EXECUTION:
-                    mf = meta(sub.getOption().metafile);
-                    res = result(sub.getOption(), mf);
-                    res.type = resty;
-                    break;
+                RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
+                meta mf;
+                result res;
+                switch(resty)
+                {
+                    case TYPE_COMPILATION:
+                    case TYPE_EXECUTION:
+                        mf = meta(sub.getOption().metafile);
+                        res = result(sub.getOption(), mf);
+                        res.type = resty;
+                        break;
+                }
+                sub.setResult(res);
             }
-            sub.setResult(res);
+            else if(WIFSIGNALED(chldsta))
+            {
+                result res;
+                sub.setResult(res);
+                log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
+                log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
+            }
+            log("Sending result.", LVDE);
+            s->sendResult(sub);
+            log("Successfully sent result.", LVDE);
+            pidmap.erase(pidmap.find(chldpid));
         }
-        else if(WIFSIGNALED(chldsta))
+        catch(out_of_range ex)
         {
-            result res;
-            sub.setResult(res);
-            log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
-            log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
+            log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
+            continue;
         }
-        log("Sending result.", LVDE);
-        s->sendResult(sub);
-        log("Successfully sent result.", LVDE);
-        pidmap.erase(pidmap.find(chldpid));
     }
 }
 
@@ -384,17 +393,18 @@ pid_t testWorkFlow(submission& sub)
         {
             log("Unable to create box.", LVER);
             log("Box id: " + to_string(sub.getOption().id));
+            exit(2);
         }
         else
         {
             log("Box id: " + to_string(sub.getOption().id) + " created.", LVDE);
-            exit(2);
         }
         int compsta = sub.compile();
+        int state = 0;
         if(compsta)
         {
             log("Compile Failed.", LVWA);
-            exit(1);
+            state = 1;
         }
         sub.execute();
         //remove sandbox
@@ -404,7 +414,7 @@ pid_t testWorkFlow(submission& sub)
             log("Box id: " + to_string(sub.getOption().id));
         }
         log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
-        exit(0);
+        exit(state);
     }
     else
     {
