@@ -46,7 +46,7 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
     
     //split cmd string into vector<string>
     cmd = trim(cmd);
-    log("SandboxExec: CMD = \"" + cmd + "\"", LVDE);
+    //log("SandboxExec: CMD = \"" + cmd + "\"", LVDE);
     stringstream ss(cmd);
     string tmp;
     while(!ss.eof())
@@ -105,21 +105,26 @@ int advFork(char** argp, pid_t& pid, bool wait)
         ss << "]" << endl;
         log(ss.str());
     }
+
     int status = 0;
     pid = fork();
     if(pid == 0)
     {
         //child process
         execvp(argp[0], argp);
+        log("Failed to exec.", LVFA);
         exit(127);
     }
     else if(pid > 0)
     {
+        log("Child PID: " + to_string(pid));
         //main process
         if(wait)
-        {
-            waitpid(pid, &status, 0);
-        }
+            if(waitpid(pid, &status, 0) == -1)
+            {
+                log("Advfork: Failed to wait child process", LVER);
+                log(strerror(errno));
+            }
     }
     else
     {
@@ -128,6 +133,7 @@ int advFork(char** argp, pid_t& pid, bool wait)
         log(strerror(errno));
         status = -1;
     }
+    
     return status;
 }
 

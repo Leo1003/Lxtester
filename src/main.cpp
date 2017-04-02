@@ -387,7 +387,7 @@ void child_handler(int status)
         log("Child process terminated, PID: " + to_string(chldpid), LVDE);
         try
         {
-            submission sub = pidmap[chldpid];
+            submission sub = pidmap.at(chldpid);
             if(WIFEXITED(chldsta))
             {
                 RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
@@ -412,11 +412,13 @@ void child_handler(int status)
                 log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
             }
             //remove sandbox
+            sighandler_t rawsig = signal(SIGCHLD, SIG_DFL);
             if(boxDel(sub.getOption()))
             {
                 log("Unable to remove box.", LVER);
                 log("Box id: " + to_string(sub.getOption().id));
             }
+            signal(SIGCHLD, rawsig);
             log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
             //sendResult
             log("Sending result.", LVDE);

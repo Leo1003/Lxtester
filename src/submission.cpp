@@ -108,9 +108,6 @@ void submission::setResult(result res)
 
 int submission::compile()
 {
-    if (!lang.needComplie)
-        return 0;
-    
     ofstream code(BoxDir + "/" + to_string(opt.id) + "/box/" + srcname);
     if(!code)
     {
@@ -121,6 +118,9 @@ int submission::compile()
     code << this->code;
     code.flush();
     code.close();
+    
+    if (!lang.needComplie)
+        return 0;
     
     exec_opt compile_opt;
     compile_opt.id = opt.id;
