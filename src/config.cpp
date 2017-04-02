@@ -101,7 +101,7 @@ config::config(std::string path) : config_section()
                 continue;
             if(regex_match(buf, sm, reg_section))
             {
-                log("Loading section: " + string(sm[1]), LVDE);
+                log("Loading section: " + string(sm[1]), LVD2);
                 config_section cs(sm[1]);
                 sec[sm[1]] = cs;
                 seclist.push_back(sm[1]);

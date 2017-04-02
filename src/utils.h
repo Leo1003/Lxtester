@@ -10,6 +10,7 @@
 
 enum loglevel
 {
+    LVD2,
     LVDE,
     LVIN,
     LVWA,
@@ -19,7 +20,7 @@ enum loglevel
 };
 
 void log(std::string mes, loglevel lvpre = LVNU);
-void setLogMainProc();
+void setProcName(std::string name);
 loglevel getLevel();
 void setLevel(loglevel lv);
 std::string getSelfPath();

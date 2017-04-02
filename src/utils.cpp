@@ -1,7 +1,7 @@
 #include "utils.h"
 using namespace std;
 
-pid_t mainproc;
+string procname;
 loglevel lvlast = LVNU, lvset = LVIN;
 void log(string mes, loglevel lvpre)
 {
@@ -17,29 +17,27 @@ void log(string mes, loglevel lvpre)
         case LVWA : lvmes = "[WARN] "; break;
         case LVIN : lvmes = "[INFO] "; break;
         case LVDE : lvmes = "[DEBUG]"; break;
+        case LVD2 : lvmes = "[DEBUG]"; break;
         case LVNU : lvmes = "       "; break;
     }
     if(lvpre != LVNU)
         lvlast = lvpre;
-    stringstream pidprompt;
-    if(mainproc > 0)
+    stringstream ident;
+    if(lvset == LVD2)
     {
-        if(getpid() != mainproc)
-            pidprompt << setw(5) << getpid() << ": ";
-        else
-            pidprompt << "Main : ";
+        ident << left << setw(10) << procname << "-> ";
     }
     string buf;
     stringstream ss(mes);
     stringstream errbuf;
     while(getline(ss, buf))
-        errbuf << pidprompt.str() << lvmes << " " << buf << "\n";
+        errbuf << ident.str() << lvmes << " " << buf << "\n";
     cerr << errbuf.str();
 }
 
-void setLogMainProc()
+void setProcName(string name)
 {
-    mainproc = getpid();
+    procname = name;
 }
 
 loglevel getLevel()

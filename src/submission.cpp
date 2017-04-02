@@ -27,7 +27,7 @@ submission::submission(int id, string lang, string exe, string src)
 
 language submission::getLang(string lang)
 {
-    log(lang, LVDE);
+    log(lang, LVD2);
     language l = langs.at(lang);
     try
     {

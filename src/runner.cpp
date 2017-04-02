@@ -46,7 +46,7 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
     
     //split cmd string into vector<string>
     cmd = trim(cmd);
-    //log("SandboxExec: CMD = \"" + cmd + "\"", LVDE);
+    log("SandboxExec: CMD = \"" + cmd + "\"", LVD2);
     stringstream ss(cmd);
     string tmp;
     while(!ss.eof())
@@ -99,8 +99,8 @@ int advFork(char** argp, pid_t& pid, bool wait)
         int i = 0;
         while(argp[i] != NULL)
         {
-            ss << argp[i] << ", ";
-            i++;
+            ss << argp[i++];
+            if(argp[i] != NULL) ss << ", ";
         }
         ss << "]" << endl;
         log(ss.str());

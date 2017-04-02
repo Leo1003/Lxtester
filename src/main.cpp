@@ -133,6 +133,7 @@ void usage(bool wa = false)
 int main(int argc,char* argv[])
 {
     /*** Parse Arguments ***/
+    setProcName("Command");
     int opt;
     bool argdm = DaemonMode;
     OptType ty = DAE_DEFAULT;
@@ -247,7 +248,7 @@ int main(int argc,char* argv[])
 int maind()
 {
     umask(0022);
-    setLogMainProc();
+    setProcName("MainProc");
     if(chdir(WorkingDir.c_str()) == -1)
     {
         log("Failed to chdir", LVFA);
@@ -345,11 +346,11 @@ int maind()
         submission sub;
         if(s->getSubmission(sub))
         {
-            log("Received submission", LVDE);
-            log("submission id: " + to_string(sub.getId()));
+            log("Received submission, ID : " + to_string(sub.getId()), LVIN);
             testWorkFlow(sub);
         }
-        sleep(1);
+        else
+            sleep(1);
     }
     log("Server stopped.", LVIN);
     return 0;
@@ -384,7 +385,7 @@ void child_handler(int status)
     pid_t chldpid;
     while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0)
     {
-        log("Child process terminated, PID: " + to_string(chldpid), LVDE);
+        log("Child process terminated, PID: " + to_string(chldpid), LVD2);
         try
         {
             submission sub = pidmap.at(chldpid);
@@ -444,6 +445,7 @@ pid_t testWorkFlow(submission& sub)
     else if(pid == 0)
     {
         //set child environment
+        setProcName("Worker" + to_string(sub.getId()));
         signal(SIGCHLD, SIG_DFL);
         signal(SIGHUP, SIG_DFL);
         signal(SIGINT, SIG_DFL);

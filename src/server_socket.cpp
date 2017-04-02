@@ -8,7 +8,7 @@ ServerSocket::ServerSocket(string host, short port, string token)
     ss<<"wss://"<<host<<":"<<port;
     this->addr = ss.str();
     this->token = token;
-    log("Server address is: " + addr, LVDE);
+    log("Server address is: " + addr, LVIN);
     resetmt();
     cli.set_reconnect_attempts(3);
     cli.set_reconnect_delay(2000);
@@ -78,9 +78,9 @@ bool ServerSocket::getSubmission(submission& sub)
 void ServerSocket::sendResult(const submission& sub)
 {
     ULOCK
-    log("Creating object message", LVDE);
+    log("Creating object message", LVD2);
     shared_ptr<object_message> mess = static_pointer_cast<object_message>(object_message::create());
-    log("Converted object message", LVDE);
+    log("Converted object message", LVD2);
     mess->insert("id", int_message::create(sub.getId()));
     result re = sub.getResult();
     mess->insert("type", int_message::create(re.type));
@@ -91,10 +91,10 @@ void ServerSocket::sendResult(const submission& sub)
     mess->insert("killed", bool_message::create(re.isKilled));
     mess->insert("output", string_message::create(re.std_out));
     mess->insert("error", string_message::create(re.std_err));
-    log("Inserted result message", LVDE);
-    log("Emitting...", LVDE);
+    log("Inserted result message", LVD2);
+    log("Emitting...", LVD2);
     s->emit("Result", static_pointer_cast<message>(mess));
-    log("Emitted.", LVDE);
+    log("Emitted.", LVD2);
 }
 
 
