@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <sys/stat.h>
 #include <regex>
@@ -18,6 +19,7 @@ enum loglevel
 };
 
 void log(std::string mes, loglevel lvpre = LVNU);
+void setLogMainProc();
 loglevel getLevel();
 void setLevel(loglevel lv);
 std::string getSelfPath();

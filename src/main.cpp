@@ -247,7 +247,7 @@ int main(int argc,char* argv[])
 int maind()
 {
     umask(0022);
-    
+    setLogMainProc();
     if(chdir(WorkingDir.c_str()) == -1)
     {
         log("Failed to chdir", LVFA);
