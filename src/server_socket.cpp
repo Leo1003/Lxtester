@@ -40,7 +40,6 @@ int ServerSocket::connect()
     s = cli.socket("lxtester");
     s->on_error(bind(&ServerSocket::on_error, this, placeholders::_1));
     s->on("Job", bind(&ServerSocket::_job, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4));
-    s->on("CallBack", bind(&ServerSocket::_callback, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4));
     return 0;
 }
 
@@ -93,13 +92,9 @@ void ServerSocket::sendResult(const submission& sub)
     mess->insert("output", string_message::create(re.std_out));
     mess->insert("error", string_message::create(re.std_err));
     log("Inserted result message", LVDE);
-    log("Emitting", LVDE);
+    log("Emitting...", LVDE);
     s->emit("Result", static_pointer_cast<message>(mess));
-    resetmt();
-    if(!unlocked && !failed)
-        _cv.wait(_ul);
-    _ul.unlock();
-    log("CallBack received.", LVDE);
+    log("Emitted.", LVDE);
 }
 
 
@@ -182,13 +177,5 @@ void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_
         log("Failed to receive job", LVFA);
         log(ex.what());
     }
-}
-
-void ServerSocket::_callback(const std::string& name, const sio::message::ptr& mess, bool need_ack, sio::message::list& ack_message)
-{
-    ULOCK
-    unlocked = true;
-    log("A message had been sucessfully sent to the server.", LVDE);
-    _cv.notify_all();
 }
 
