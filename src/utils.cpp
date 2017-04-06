@@ -93,7 +93,7 @@ string getConfDir()
 bool isFile(string path)
 {
     struct stat st;
-    if(stat(path.c_str(), &st) != 0 && S_ISREG(st.st_mode))
+    if(stat(path.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
     {
         return false;
     }
@@ -103,7 +103,7 @@ bool isFile(string path)
 bool isDir(string path)
 {
     struct stat st;
-    if(stat(path.c_str(), &st) != 0 && S_ISDIR(st.st_mode))
+    if(stat(path.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
     {
         return false;
     }

@@ -294,10 +294,11 @@ int maind()
     {
         if(mkdir("./meta", 0755) == -1)
         {
-            log("Failed to mkdir \"./meta\".", LVFA);
+            log("Failed to mkdir: meta", LVFA);
             log(strerror(errno));
             exit(1);
         }
+        log("Created directory: meta", LVIN);
     }
 
     signal(SIGTSTP, SIG_IGN);
