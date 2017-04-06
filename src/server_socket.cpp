@@ -162,15 +162,22 @@ void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_
     ULOCK
     try
     {
-        object_message msg = *(dynamic_pointer_cast<object_message>(mess));
-        int id = msg["id"]->get_int();
-        string l = msg["language"]->get_string();
-        string exefile = msg["exefile"]->get_string();
-        string srcfile = msg["srcfile"]->get_string();
+        //object_message msg = *(dynamic_pointer_cast<object_message>(mess));
+        map<string, message::ptr> msg = mess->get_map();
+        int id = msg.at("id")->get_int();
+        string l = msg.at("language")->get_string();
+        string exefile = msg.at("exefile")->get_string();
+        string srcfile = msg.at("srcfile")->get_string();
         submission sub(id, l, exefile, srcfile);
 
-        sub.setCode(msg["code"]->get_string());
+        sub.setCode(msg.at("code")->get_string());
+        sub.setStdin(msg.at("stdin")->get_string());
         jobque.push(sub);
+    }
+    catch(out_of_range ex)
+    {
+        log("Server sent a bad submission format!", LVWA);
+        log(ex.what());
     }
     catch(exception ex)
     {

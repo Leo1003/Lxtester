@@ -124,7 +124,7 @@ int submission::compile()
     
     exec_opt compile_opt;
     compile_opt.id = opt.id;
-    compile_opt.mem = opt.mem;
+    compile_opt.mem = 262144;
     compile_opt.fsize = opt.fsize;
     compile_opt.metafile = opt.metafile;
     compile_opt.processes = 10;
