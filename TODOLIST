@@ -1,0 +1,4 @@
+make AdvFork use pipe to transfer isolate
+add debug-level parameter
+loglevel include isolate's output
+use setproctitle to show special title in htop
