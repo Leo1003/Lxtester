@@ -10,9 +10,11 @@ ServerSocket::ServerSocket(string host, short port, string token)
     this->token = token;
     log("Server address is: " + addr, LVIN);
     resetmt();
-    cli.set_reconnect_attempts(3);
+    shutdowned = false;
+    errored = false;
+    cli.set_reconnect_attempts(2);
     cli.set_reconnect_delay(2000);
-    cli.set_reconnect_delay_max(2500);
+    cli.set_reconnect_delay_max(2000);
     cli.set_open_listener(bind(&ServerSocket::on_connected, this));
     cli.set_fail_listener(bind(&ServerSocket::on_failed, this));
     cli.set_close_listener(bind(&ServerSocket::on_closed, this, placeholders::_1));
@@ -27,13 +29,13 @@ int ServerSocket::connect()
 {
     if(cli.opened())
         return 0;
-    map<string,string> query;
-    query["passtoken"] = token;
-    cli.connect(addr, map<string,string>(), query);
-    resetmt();
+    _connect();
     ULOCK
-    if(!unlocked && !failed)
-        _cv.wait(_ul);
+    log("Locked!", LVD2);
+    resetmt();
+    if(!unlocked && !failed){
+        log("_cv.wait()...", LVD2);
+        _cv.wait(_ul);}
     _ul.unlock();
     if(failed)
         return 1;
@@ -41,6 +43,13 @@ int ServerSocket::connect()
     s->on_error(bind(&ServerSocket::on_error, this, placeholders::_1));
     s->on("Job", bind(&ServerSocket::_job, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4));
     return 0;
+}
+
+void ServerSocket::_connect()
+{
+    map<string,string> query;
+    query["passtoken"] = token;
+    cli.connect(addr, map<string,string>(), query);
 }
 
 int ServerSocket::disconnect()
@@ -65,6 +74,8 @@ bool ServerSocket::getConnected() const
 
 bool ServerSocket::getSubmission(submission& sub)
 {
+    if(errored)
+        throw runtime_error("Socket Error");
     ULOCK
     if(jobque.empty())
     {
@@ -114,20 +125,43 @@ void ServerSocket::on_connected()
 
 void ServerSocket::on_failed()
 {
+    log("on_failed", LVD2);
+    if(!_lock.try_lock())
+        return;
+    else
+        _lock.unlock();
     ULOCK
     failed = true;
-    log("Failed to connect to server.", LVER);
-    //TODO:Lost connection event occured here!
+    while(!cli.opened())
+    {
+        log("Failed to connect to server.", LVER);
+        log("Retry in 60 seconds...", LVIN);
+        int time = 60;
+        while(time--)
+        {
+            if(stopping)
+            {
+                _cv.notify_all();
+                return;
+            }
+            sleep(1);
+        }
+        log("Reconnecting...", LVIN);
+        _connect();
+    }
+    failed = false;
+    unlocked = true;
     _cv.notify_all();
 }
 
 void ServerSocket::on_error(const sio::message::ptr& message)
 {
+    log("on_error", LVD2);
     ULOCK
     failed = true;
-    log("Authentication error", LVFA);
-    log("Can't connect to server.");
-    //TODO:Authentication error event occured here!
+    errored = true;
+    log(message->get_string(), LVFA);
+    log("An error has occurred when connecting to server.");
     _cv.notify_all();
 }
 
@@ -140,7 +174,7 @@ void ServerSocket::on_closed(client::close_reason const& reason)
         {
             log("Lost connect to server.", LVER);
             log("Trying to reconnect...", LVIN);
-            connect();
+            _connect();
             if(failed)
             {
                 log("Reconnect failed.", LVER);
@@ -162,7 +196,6 @@ void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_
     ULOCK
     try
     {
-        //object_message msg = *(dynamic_pointer_cast<object_message>(mess));
         map<string, message::ptr> msg = mess->get_map();
         int id = msg.at("id")->get_int();
         string l = msg.at("language")->get_string();

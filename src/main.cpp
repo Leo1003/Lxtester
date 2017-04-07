@@ -322,36 +322,30 @@ int maind()
     }
     log("Daemon PID: " + to_string(getpid()), LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
-    while(!s->getConnected())
+    s->connect();
+    log("Server Started", LVIN);
+    if(!s->getConnected())
     {
-        s->connect();
-        if(!s->getConnected())
+        log("Can't connect to server.", LVFA);
+        exit(1);
+    }
+    try
+    {
+        while(!stopping)
         {
-            log("Retry in 60 seconds...", LVIN);
-            int time = 60;
-            while(time--)
+            submission sub;
+            if(s->getSubmission(sub))
             {
-                if(stopping) 
-                {
-                    log("Server stopped.", LVIN);
-                    exit(0);
-                }
-                sleep(1);
+                log("Received submission, ID : " + to_string(sub.getId()), LVIN);
+                testWorkFlow(sub);
             }
-            log("Reconnecting...", LVIN);
+            else
+                sleep(1);
         }
     }
-    log("Server Started", LVIN);
-    while(!stopping)
+    catch(runtime_error ex)
     {
-        submission sub;
-        if(s->getSubmission(sub))
-        {
-            log("Received submission, ID : " + to_string(sub.getId()), LVIN);
-            testWorkFlow(sub);
-        }
-        else
-            sleep(1);
+        log("connection lost.", LVFA);
     }
     log("Server stopped.", LVIN);
     return 0;

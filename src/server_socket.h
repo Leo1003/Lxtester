@@ -30,12 +30,13 @@ private:
     sio::socket::ptr s;
     std::mutex _lock;
     std::condition_variable _cv;
-    bool unlocked, failed, shutdowned;
+    bool unlocked, failed, shutdowned, errored;
     std::string addr;
     std::string token;
     std::queue<submission> jobque;
     
     inline void resetmt();
+    void _connect();
     //Listeners
     void on_connected();
     void on_failed();
