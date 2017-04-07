@@ -158,6 +158,13 @@ int submission::execute()
 
 result::result() 
 { 
+    time = 0;
+    mem = 0;
+    exitcode = 0;
+    signal = 0;
+    isKilled = false;
+    std_out = "";
+    std_err = "";
     type = TYPE_FAILED;
 }
 

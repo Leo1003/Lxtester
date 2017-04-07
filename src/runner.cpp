@@ -137,7 +137,20 @@ int advFork(char** argp, pid_t& pid, bool wait)
     return status;
 }
 
-meta::meta() { }
+meta::meta() 
+{ 
+    cg_mem = 0;
+    csw_forced = 0;
+    csw_voluntary = 0;
+    max_rss = 0;
+    time = -1;
+    time_wall = -1;
+    exitcode = 0;
+    exitsig = 0;
+    isKilled = 0;
+    message = "";
+    status = "";
+}
 
 meta::meta (string metafile)
 {
