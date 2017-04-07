@@ -392,19 +392,28 @@ void child_handler(int status)
             submission sub = pidmap.at(chldpid);
             if(WIFEXITED(chldsta))
             {
-                RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
-                meta mf;
-                result res;
-                switch(resty)
+                try
                 {
-                    case TYPE_COMPILATION:
-                    case TYPE_EXECUTION:
-                        mf = meta(sub.getOption().metafile);
-                        res = result(sub.getOption(), mf);
-                        res.type = resty;
-                        break;
+                    RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
+                    meta mf;
+                    result res;
+                    switch(resty)
+                    {
+                        case TYPE_COMPILATION:
+                        case TYPE_EXECUTION:
+                            mf = meta(sub.getOption().metafile);
+                            res = result(sub.getOption(), mf);
+                            res.type = resty;
+                            break;
+                    }
+                    sub.setResult(res);
                 }
-                sub.setResult(res);
+                catch(ifstream::failure ex)
+                {
+                    log("Failed to load meta file: " + sub.getOption().metafile, LVER);
+                    result res;
+                    sub.setResult(res);
+                }
             }
             else if(WIFSIGNALED(chldsta))
             {

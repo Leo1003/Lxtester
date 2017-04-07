@@ -142,6 +142,10 @@ meta::meta() { }
 meta::meta (string metafile)
 {
     ifstream mf(metafile);
+    if(mf.fail())
+    {
+        throw ifstream::failure(strerror(errno));
+    }
     map<string, string> m;
     string buff;
     while(getline(mf, buff))
