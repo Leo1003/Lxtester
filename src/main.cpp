@@ -390,6 +390,7 @@ void child_handler(int status)
         try
         {
             submission sub = pidmap.at(chldpid);
+            setProcName("Handler" + to_string(sub.getId()));
             if(WIFEXITED(chldsta))
             {
                 try

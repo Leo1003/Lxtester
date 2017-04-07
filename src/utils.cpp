@@ -25,7 +25,7 @@ void log(string mes, loglevel lvpre)
     stringstream ident;
     if(lvset == LVD2)
     {
-        ident << left << setw(10) << procname << "-> ";
+        ident << left << setw(12) << procname << "-> ";
     }
     string buf;
     stringstream ss(mes);
