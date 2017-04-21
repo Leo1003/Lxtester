@@ -1,9 +1,22 @@
+#ifndef LOGGER_H
+#define LOGGER_H
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include "utils.h"
 using namespace std;
+
+enum loglevel
+{
+    LVD2,
+    LVDE,
+    LVIN,
+    LVWA,
+    LVER,
+    LVFA,
+    LVNU
+};
 
 class logger {
 public:
@@ -17,3 +30,5 @@ private:
     loglevel lastlv;
     static loglevel globalset;
 };
+
+#endif

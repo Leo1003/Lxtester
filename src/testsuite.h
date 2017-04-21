@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "config.h"
+#include "logger.h"
 #include "global.h"
 #include "utils.h"
 

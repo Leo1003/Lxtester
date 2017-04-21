@@ -3,7 +3,6 @@ limit processing submission count
 not to ignore terminal signal when running in no-daemon mode
 notify server when the queue is full
 make AdvFork use pipe to transfer isolate's output
-make log function as a class -> [50%]
 add debug-level parameter
 also load config from .local file
 config add isolate binary path

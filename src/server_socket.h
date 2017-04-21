@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "logger.h"
 #include "submission.h"
 #include "utils.h"
 #include "../lib/sio_client.h"
@@ -34,6 +35,7 @@ private:
     std::string addr;
     std::string token;
     std::queue<submission> jobque;
+    logger lg;
     
     inline void resetmt();
     void _connect();

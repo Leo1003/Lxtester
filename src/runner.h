@@ -11,6 +11,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/signal.h>
+#include "global.h"
+#include "logger.h"
 #include "utils.h"
 
 struct exec_opt

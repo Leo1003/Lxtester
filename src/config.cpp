@@ -20,7 +20,7 @@ bool config_section::getBool(std::string key) const
         return true;
     if(regex_match(str, f))
         return false;
-    log("Parsing config:" + key + " to boolean failed.", LVWA);
+    mainlg.log("Parsing config:" + key + " to boolean failed.", LVWA);
     return false;
 }
 
@@ -34,7 +34,7 @@ int64_t config_section::getInt(std::string key) const
     }
     catch(invalid_argument ex)
     {
-        log("Parsing config:" + key + " to integer failed.", LVWA);
+        mainlg.log("Parsing config:" + key + " to integer failed.", LVWA);
     }
     return v;
 }
@@ -47,7 +47,7 @@ string config_section::getString(string key) const
     }
     catch(out_of_range ex)
     {
-        log("Accessing non-existed config:" + key + ".", LVWA);
+        mainlg.log("Accessing non-existed config:" + key + ".", LVWA);
         return "";
     }
 }
@@ -90,7 +90,7 @@ config::config(std::string path) : config_section()
         {
             throw ifstream::failure(strerror(errno));
         }
-        log("Loading config: " + path, LVDE);
+        mainlg.log("Loading config: " + path, LVDE);
         int linec = 0;
         string buf, secpointer = "_";
         smatch sm;
@@ -101,7 +101,7 @@ config::config(std::string path) : config_section()
                 continue;
             if(regex_match(buf, sm, reg_section))
             {
-                log("Loading section: " + string(sm[1]), LVD2);
+                mainlg.log("Loading section: " + string(sm[1]), LVD2);
                 config_section cs(sm[1]);
                 sec[sm[1]] = cs;
                 seclist.push_back(sm[1]);
@@ -116,15 +116,15 @@ config::config(std::string path) : config_section()
                     sec[secpointer].insert(sm[1], sm[2]);
                 continue;
             }
-            log("Can't recognize config file: " + path + " , at line: " + to_string(linec), LVWA);
+            mainlg.log("Can't recognize config file: " + path + " , at line: " + to_string(linec), LVWA);
         }
         conf.close();
-        log("Loaded config: " + path, LVDE);
+        mainlg.log("Loaded config: " + path, LVDE);
     }
     catch(exception ex)
     {
-        log("Something bad happened while parsing config file: " + path, LVFA);
-        log(ex.what());
+        mainlg.log("Something bad happened while parsing config file: " + path, LVFA);
+        mainlg.log(ex.what());
         throw ex;
     }
 }
@@ -137,7 +137,7 @@ const config_section& config::operator[](std::string key) const
     }
     catch(out_of_range ex)
     {
-        log("Accessing non-existed section:" + key + ".", LVWA);
+        mainlg.log("Accessing non-existed section:" + key + ".", LVWA);
         throw ex;
     }
 }
