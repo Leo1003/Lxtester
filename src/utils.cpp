@@ -1,56 +1,6 @@
 #include "utils.h"
 using namespace std;
 
-string procname;
-loglevel lvlast = LVNU, lvset = LVIN;
-void log(string mes, loglevel lvpre)
-{
-    if(lvpre < lvset)
-        return;
-    if(lvpre == LVNU && lvlast < lvset)
-        return;
-    string lvmes;
-    switch(lvpre)
-    {
-        case LVFA : lvmes = "[FATAL]"; break;
-        case LVER : lvmes = "[ERROR]"; break;
-        case LVWA : lvmes = "[WARN] "; break;
-        case LVIN : lvmes = "[INFO] "; break;
-        case LVDE : lvmes = "[DEBUG]"; break;
-        case LVD2 : lvmes = "[DEBUG]"; break;
-        case LVNU : lvmes = "       "; break;
-    }
-    if(lvpre != LVNU)
-        lvlast = lvpre;
-    stringstream ident;
-    if(lvset == LVD2)
-    {
-        ident << left << setw(12) << procname << "-> ";
-    }
-    string buf;
-    stringstream ss(mes);
-    stringstream errbuf;
-    while(getline(ss, buf))
-        errbuf << ident.str() << lvmes << " " << buf << "\n";
-    cerr << errbuf.str();
-}
-
-void setProcName(string name)
-{
-    procname = name;
-}
-
-loglevel getLevel()
-{
-    return lvset;
-}
-
-void setLevel(loglevel lv)
-{
-    lvset = lv;
-}
-
-
 string getSelfPath()
 {
     char buf[5001];
@@ -82,11 +32,11 @@ string getConfDir()
         struct stat st;
         if(stat(ss.str().c_str(), &st) != -1 && st.st_mode & S_IFREG)
         {
-            log("Found config file: " + ss.str(), LVDE);
+            mainlg.log("Found config file: " + ss.str(), LVDE);
             return dir;
         }
     }
-    log("Config file not found", LVER);
+    mainlg.log("Config file not found", LVER);
     return "";
 }
 
@@ -120,8 +70,8 @@ int tryParse(string str, int def)
     }
     catch(invalid_argument ex)
     {
-        log("Parsing string error:", LVER);
-        log(ex.what());
+        mainlg.log("Parsing string error:", LVER);
+        mainlg.log(ex.what());
         return def;
     }
 }
@@ -136,8 +86,8 @@ long long tryParsell(string str, long long def)
     }
     catch(invalid_argument ex)
     {
-        log("Parsing string error:", LVER);
-        log(ex.what());
+        mainlg.log("Parsing string error:", LVER);
+        mainlg.log(ex.what());
         return def;
     }
 }

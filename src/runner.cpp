@@ -46,7 +46,7 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
     
     //split cmd string into vector<string>
     cmd = trim(cmd);
-    log("SandboxExec: CMD = \"" + cmd + "\"", LVD2);
+    mainlg.log("SandboxExec: CMD = \"" + cmd + "\"", LVD2);
     stringstream ss(cmd);
     string tmp;
     while(!ss.eof())
@@ -91,10 +91,10 @@ int boxDel(exec_opt option)
 
 int advFork(char** argp, pid_t& pid, bool wait)
 {
-    if(getLevel() == LVDE)
+    if(logger::getGlobalLevel() <= LVDE)
     {
         stringstream ss;
-        log("Advfork: Exec command:", LVDE);
+        mainlg.log("Advfork: Exec command:", LVDE);
         ss << "[";
         int i = 0;
         while(argp[i] != NULL)
@@ -103,7 +103,7 @@ int advFork(char** argp, pid_t& pid, bool wait)
             if(argp[i] != NULL) ss << ", ";
         }
         ss << "]" << endl;
-        log(ss.str());
+        mainlg.log(ss.str());
     }
 
     int status = 0;
@@ -112,25 +112,25 @@ int advFork(char** argp, pid_t& pid, bool wait)
     {
         //child process
         execvp(argp[0], argp);
-        log("Failed to exec.", LVFA);
+        mainlg.log("Failed to exec.", LVFA);
         exit(127);
     }
     else if(pid > 0)
     {
-        log("Child PID: " + to_string(pid));
+        mainlg.log("Child PID: " + to_string(pid));
         //main process
         if(wait)
             if(waitpid(pid, &status, 0) == -1)
             {
-                log("Advfork: Failed to wait child process", LVER);
-                log(strerror(errno));
+                mainlg.log("Advfork: Failed to wait child process", LVER);
+                mainlg.log(strerror(errno));
             }
     }
     else
     {
         //failed
-        log("Advfork Failed.", LVER);
-        log(strerror(errno));
+        mainlg.log("Advfork Failed.", LVER);
+        mainlg.log(strerror(errno));
         status = -1;
     }
     

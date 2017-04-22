@@ -27,7 +27,7 @@ submission::submission(int id, string lang, string exe, string src)
 
 language submission::getLang(string lang)
 {
-    log(lang, LVD2);
+    mainlg.log(lang, LVD2);
     language l = langs.at(lang);
     try
     {
@@ -38,7 +38,7 @@ language submission::getLang(string lang)
     }
     catch (exception ex)
     {
-        log("Error when parsing language format string", LVER);
+        mainlg.log("Error when parsing language format string", LVER);
     }
     return l;
 }
@@ -54,9 +54,9 @@ std::string submission::formatCMD(std::string fmstr)
     }
     catch(exception ex)
     {
-        log("Error when parsing language format string: ", LVER);
-        log(fmstr);
-        log(ex.what());
+        mainlg.log("Error when parsing language format string: ", LVER);
+        mainlg.log(fmstr);
+        mainlg.log(ex.what());
     }
     return str;
 }
@@ -111,8 +111,8 @@ int submission::compile()
     ofstream code(BoxDir + "/" + to_string(opt.id) + "/box/" + srcname);
     if(!code)
     {
-        log("Failed to opened code file.", LVER);
-        log("Box id: " + to_string(opt.id));
+        mainlg.log("Failed to opened code file.", LVER);
+        mainlg.log("Box id: " + to_string(opt.id));
         return -1;
     }
     code << this->code;
@@ -140,8 +140,8 @@ int submission::execute()
     ofstream infile(BoxDir + "/" + to_string(opt.id) + "/box/" + opt.std_in);
     if(!infile)
     {
-        log("Failed to opened stdin file.", LVER);
-        log("Box id: " + to_string(opt.id));
+        mainlg.log("Failed to opened stdin file.", LVER);
+        mainlg.log("Box id: " + to_string(opt.id));
         return -1;
     }
     infile << this->opt.std_in;
@@ -177,7 +177,7 @@ result::result (exec_opt option, meta metas)
     isKilled = metas.isKilled;
     try
     {
-        ifstream outf(BoxDir + "/" + to_string(option.id) + "/box/stdout.log");
+        ifstream outf(BoxDir + "/" + to_string(option.id) + "/box/stdout.mainlg.log");
         string s;
         while(getline(outf, s))
         {
@@ -187,12 +187,12 @@ result::result (exec_opt option, meta metas)
     }
     catch(exception ex)
     {
-        log("Fail to open output", LVER);
-        log(ex.what());
+        mainlg.log("Fail to open output", LVER);
+        mainlg.log(ex.what());
     }
     try
     {
-        ifstream errf(BoxDir + "/" + to_string(option.id) + "/box/stderr.log");
+        ifstream errf(BoxDir + "/" + to_string(option.id) + "/box/stderr.mainlg.log");
         string s;
         while(getline(errf, s))
         {
@@ -202,8 +202,8 @@ result::result (exec_opt option, meta metas)
     }
     catch(exception ex)
     {
-        log("Fail to open stderr", LVER);
-        log(ex.what());
+        mainlg.log("Fail to open stderr", LVER);
+        mainlg.log(ex.what());
     }
 }
 

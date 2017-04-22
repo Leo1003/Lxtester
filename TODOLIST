@@ -1,5 +1,10 @@
 delete meta file after read it
-make AdvFork use pipe to transfer isolate
+make sure the box not to conflict
+limit processing submission count
+not to ignore terminal signal when running in no-daemon mode
+notify server when the queue is full
+make AdvFork use pipe to transfer isolate's output
 add debug-level parameter
-loglevel include isolate's output
+also load config from .local file
+config add isolate binary path
 use setproctitle to show special title in htop

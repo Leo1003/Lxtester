@@ -7,22 +7,9 @@
 #include <regex>
 #include <vector>
 #include <unistd.h>
+#include "global.h"
+#include "logger.h"
 
-enum loglevel
-{
-    LVD2,
-    LVDE,
-    LVIN,
-    LVWA,
-    LVER,
-    LVFA,
-    LVNU
-};
-
-void log(std::string mes, loglevel lvpre = LVNU);
-void setProcName(std::string name);
-loglevel getLevel();
-void setLevel(loglevel lv);
 std::string getSelfPath();
 std::string getConfDir();
 

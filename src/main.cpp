@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include "config.h"
 #include "global.h"
+#include "logger.h"
 #include "server_socket.h"
 #include "submission.h"
 #include "utils.h"
@@ -26,14 +27,16 @@ int maind();
 void signal_handler(int);
 void child_handler(int);
 pid_t testWorkFlow(submission& sub);
+logger mainlg("MainProc");
 
 void ConfigLoader()
 {
+    logger lg("ConfigLoader");
     string confpath = getConfDir() + "/lxtester.conf";
     if(!isFile(confpath))
     {
-        log("Can't open config file.", LVFA);
-        log(strerror(errno));
+        lg.log("Can't open config file.", LVFA);
+        lg.log(strerror(errno));
         exit(1);
     }
     try
@@ -42,8 +45,8 @@ void ConfigLoader()
     }
     catch(exception ex)
     {
-        log("Failed to load main config.", LVFA);
-        log(ex.what());
+        lg.log("Failed to load main config.", LVFA);
+        lg.log(ex.what());
         exit(1);
     }
     if(mainconf.isExist("DaemonMode"))
@@ -67,11 +70,12 @@ void ConfigLoader()
     if(mainconf.isExist("ServerToken"))
         ServerToken = mainconf.getString("ServerToken");
     if(mainconf.isExist("DebugLevel"))
-        setLevel((loglevel)mainconf.getInt("DebugLevel"));
+        logger::setGlobalLevel((loglevel)mainconf.getInt("DebugLevel"));
 }
 
 bool DetectDaemon()
 {
+    logger lg("DetectDaemon");
     int lfp=open(LOCKFile.c_str(), O_RDWR, 0640);
 	if (lfp<0) return 0;
     if (lockf(lfp,F_TEST,0) < 0)
@@ -80,7 +84,7 @@ bool DetectDaemon()
         ifstream pidf(PIDFile);
         if(!pidf)
         {
-            log("Fail to read pid file.", LVFA);
+            lg.log("Fail to read pid file.", LVFA);
             exit(1);
         }
         pidf >> daepid;
@@ -133,7 +137,7 @@ void usage(bool wa = false)
 int main(int argc,char* argv[])
 {
     /*** Parse Arguments ***/
-    setProcName("Command");
+    logger lg("Command");
     int opt;
     bool argdm = DaemonMode;
     OptType ty = DAE_DEFAULT;
@@ -177,7 +181,7 @@ int main(int argc,char* argv[])
 
     if(geteuid())
     {
-        log("Please run lxtester as root!", LVFA);
+        lg.log("Please run lxtester as root!", LVFA);
         return 2;
     }
 
@@ -192,7 +196,7 @@ int main(int argc,char* argv[])
         case DAE_DEFAULT:
             if(daerunning)
             {
-                log("There is another process running.", LVER);
+                lg.log("There is another process running.", LVER);
                 return 1;
             }
             if(DaemonMode)
@@ -201,21 +205,21 @@ int main(int argc,char* argv[])
         case DAE_STOP:
             if(!daerunning)
             {
-                log("There is no process running.", LVER);
+                lg.log("There is no process running.", LVER);
                 return 1;
             }
             kill(daepid, 15);
-            log("Stopping...", LVIN);
+            lg.log("Stopping...", LVIN);
             while(DetectDaemon())
             {
                 sleep(1);
             }
-            log("Stopped.", LVIN);
+            lg.log("Stopped.", LVIN);
             break;
         case DAE_RELOAD:
             if(!daerunning)
             {
-                log("There is no process running.", LVER);
+                lg.log("There is no process running.", LVER);
                 return 1;
             }
             kill(daepid, 1);
@@ -223,7 +227,7 @@ int main(int argc,char* argv[])
         case DAE_RESTART:
             if(!daerunning)
             {
-                log("There is no process running.", LVER);
+                lg.log("There is no process running.", LVER);
                 return 1;
             }
             kill(daepid, 15);
@@ -236,11 +240,11 @@ int main(int argc,char* argv[])
         case DAE_KILL:
             if(!daerunning)
             {
-                log("There is no process running.", LVER);
+                lg.log("There is no process running.", LVER);
                 return 1;
             }
             kill(daepid, 9);
-            log("Killed.", LVIN);
+            lg.log("Killed.", LVIN);
             break;
     }
 }
@@ -248,11 +252,10 @@ int main(int argc,char* argv[])
 int maind()
 {
     umask(0022);
-    setProcName("MainProc");
     if(chdir(WorkingDir.c_str()) == -1)
     {
-        log("Failed to chdir", LVFA);
-        log(strerror(errno));
+        mainlg.log("Failed to chdir", LVFA);
+        mainlg.log(strerror(errno));
         exit(1);
     }
     if(DaemonMode)
@@ -268,24 +271,24 @@ int maind()
             failed = true;
         if(failed)
         {
-            log("Failed to redirect IO.", LVFA);
-            log(strerror(errno));
+            mainlg.log("Failed to redirect IO.", LVFA);
+            mainlg.log(strerror(errno));
             exit(1);
         }
     }
-    log("Chdir to:" + string(getcwd(NULL, 0)), LVDE);
+    mainlg.log("Chdir to:" + string(getcwd(NULL, 0)), LVDE);
     int lfp = open(LOCKFile.c_str(), O_RDWR|O_CREAT|O_TRUNC, 0640);
 	if (lfp < 0) return 1;
 	if (lockf(lfp, F_TLOCK, 0) < 0)
     {
-        log("Can't lock \"" + LOCKFile + "\"", LVFA);
-        log("Maybe another process is running.");
+        mainlg.log("Can't lock \"" + LOCKFile + "\"", LVFA);
+        mainlg.log("Maybe another process is running.");
         return 2;
     }
     ofstream pidf;
     pidf.open(PIDFile);
     if(!pidf){
-        log("Fail to write pid file:", LVFA);
+        mainlg.log("Fail to write pid file:", LVFA);
         return 2;
     }
     pidf << getpid() << endl;
@@ -294,11 +297,11 @@ int maind()
     {
         if(mkdir("./meta", 0755) == -1)
         {
-            log("Failed to mkdir: meta", LVFA);
-            log(strerror(errno));
+            mainlg.log("Failed to mkdir: meta", LVFA);
+            mainlg.log(strerror(errno));
             exit(1);
         }
-        log("Created directory: meta", LVIN);
+        mainlg.log("Created directory: meta", LVIN);
     }
 
     signal(SIGTSTP, SIG_IGN);
@@ -315,18 +318,18 @@ int maind()
     }
     catch(exception ex)
     {
-        log("Failed to load languages config.", LVFA);
-        log(ex.what());
-        log("Abort!", LVFA);
+        mainlg.log("Failed to load languages config.", LVFA);
+        mainlg.log(ex.what());
+        mainlg.log("Abort!", LVFA);
         exit(1);
     }
-    log("Daemon PID: " + to_string(getpid()), LVIN);
+    mainlg.log("Daemon PID: " + to_string(getpid()), LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
     s->connect();
-    log("Server Started", LVIN);
+    mainlg.log("Server Started", LVIN);
     if(!s->getConnected())
     {
-        log("Can't connect to server.", LVFA);
+        mainlg.log("Can't connect to server.", LVFA);
         exit(1);
     }
     try
@@ -336,7 +339,7 @@ int maind()
             submission sub;
             if(s->getSubmission(sub))
             {
-                log("Received submission, ID : " + to_string(sub.getId()), LVIN);
+                mainlg.log("Received submission, ID : " + to_string(sub.getId()), LVIN);
                 testWorkFlow(sub);
             }
             else
@@ -345,29 +348,25 @@ int maind()
     }
     catch(runtime_error ex)
     {
-        log("connection lost.", LVFA);
+        mainlg.log("connection lost.", LVFA);
     }
-    log("Server stopped.", LVIN);
+    mainlg.log("Server stopped.", LVIN);
     return 0;
 }
 
 void signal_handler(int sig)
 {
     switch(sig) {
-        case SIGHUP:
-            log("Reloading lxtester server...", LVIN);
-            log("Server reloaded.", LVIN);
-            break;
         case SIGINT:
             if(!DaemonMode)
             {
-                log("Received signal 2", LVIN);
-                log("Stopping lxtester server...", LVIN);
+                mainlg.log("Received signal 2", LVIN);
+                mainlg.log("Stopping lxtester server...", LVIN);
                 stopping = 1;
             }
             break;
         case SIGTERM:
-            log("Stopping lxtester server...", LVIN);
+            mainlg.log("Stopping lxtester server...", LVIN);
             stopping = 1;
             break;
     }
@@ -380,10 +379,11 @@ void child_handler(int status)
     pid_t chldpid;
     while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0)
     {
-        log("Child process terminated, PID: " + to_string(chldpid), LVD2);
+        mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVD2);
         try
         {
             submission sub = pidmap.at(chldpid);
+            logger lg("Worker" + to_string(sub.getId()));
             if(WIFEXITED(chldsta))
             {
                 try
@@ -404,7 +404,7 @@ void child_handler(int status)
                 }
                 catch(ifstream::failure ex)
                 {
-                    log("Failed to load meta file: " + sub.getOption().metafile, LVER);
+                    lg.log("Failed to load meta file: " + sub.getOption().metafile, LVER);
                     result res;
                     sub.setResult(res);
                 }
@@ -413,27 +413,27 @@ void child_handler(int status)
             {
                 result res;
                 sub.setResult(res);
-                log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
-                log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
+                lg.log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
+                lg.log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
             }
             //remove sandbox
             sighandler_t rawsig = signal(SIGCHLD, SIG_DFL);
             if(boxDel(sub.getOption()))
             {
-                log("Unable to remove box.", LVER);
-                log("Box id: " + to_string(sub.getOption().id));
+                lg.log("Unable to remove box.", LVER);
+                lg.log("Box id: " + to_string(sub.getOption().id));
             }
             signal(SIGCHLD, rawsig);
-            log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
+            lg.log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
             //sendResult
-            log("Sending result.", LVDE);
+            lg.log("Sending result.", LVDE);
             s->sendResult(sub);
-            log("Successfully sent result.", LVDE);
+            lg.log("Successfully sent result.", LVDE);
             pidmap.erase(pidmap.find(chldpid));
         }
         catch(out_of_range ex)
         {
-            log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
+            mainlg.log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
             continue;
         }
     }
@@ -449,7 +449,7 @@ pid_t testWorkFlow(submission& sub)
     else if(pid == 0)
     {
         //set child environment
-        setProcName("Worker" + to_string(sub.getId()));
+        mainlg = logger("Worker" + to_string(sub.getId()));
         signal(SIGCHLD, SIG_DFL);
         signal(SIGHUP, SIG_DFL);
         signal(SIGINT, SIG_DFL);
@@ -457,19 +457,19 @@ pid_t testWorkFlow(submission& sub)
         //create sandbox
         if(boxInit(sub.getOption())) 
         {
-            log("Unable to create box.", LVER);
-            log("Box id: " + to_string(sub.getOption().id));
+            mainlg.log("Unable to create box.", LVER);
+            mainlg.log("Box id: " + to_string(sub.getOption().id));
             exit(2);
         }
         else
         {
-            log("Box id: " + to_string(sub.getOption().id) + " created.", LVDE);
+            mainlg.log("Box id: " + to_string(sub.getOption().id) + " created.", LVDE);
         }
         int compsta = sub.compile();
         int state = 0;
         if(compsta)
         {
-            log("Compile Failed.", LVWA);
+            mainlg.log("Compile Failed.", LVWA);
             state = 1;
         }
         else
@@ -478,8 +478,8 @@ pid_t testWorkFlow(submission& sub)
     }
     else
     {
-        log("Unable to fork.", LVFA);
-        log(strerror(errno));
+        mainlg.log("Unable to fork.", LVFA);
+        mainlg.log(strerror(errno));
     }
     return pid;
 }

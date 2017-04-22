@@ -2,13 +2,13 @@
 using namespace std;
 using namespace sio;
 
-ServerSocket::ServerSocket(string host, short port, string token)
+ServerSocket::ServerSocket(string host, short port, string token) : lg(logger("Socket"))
 {
     stringstream ss;
     ss<<"wss://"<<host<<":"<<port;
     this->addr = ss.str();
     this->token = token;
-    log("Server address is: " + addr, LVIN);
+    lg.log("Server address is: " + addr, LVIN);
     resetmt();
     shutdowned = false;
     errored = false;
@@ -31,10 +31,10 @@ int ServerSocket::connect()
         return 0;
     _connect();
     ULOCK
-    log("Locked!", LVD2);
+    lg.log("Locked!", LVD2);
     resetmt();
     if(!unlocked && !failed){
-        log("_cv.wait()...", LVD2);
+        lg.log("_cv.wait()...", LVD2);
         _cv.wait(_ul);}
     _ul.unlock();
     if(failed)
@@ -57,7 +57,7 @@ int ServerSocket::disconnect()
     if(!cli.opened())
         return 127;
     ULOCK
-    log("Disconnecting from server...", LVIN);
+    lg.log("Disconnecting from server...", LVIN);
     shutdowned = true;
     cli.close();
     resetmt();
@@ -89,9 +89,9 @@ bool ServerSocket::getSubmission(submission& sub)
 void ServerSocket::sendResult(const submission& sub)
 {
     ULOCK
-    log("Creating object message", LVD2);
+    lg.log("Creating object message", LVD2);
     shared_ptr<object_message> mess = static_pointer_cast<object_message>(object_message::create());
-    log("Converted object message", LVD2);
+    lg.log("Converted object message", LVD2);
     mess->insert("id", int_message::create(sub.getId()));
     result re = sub.getResult();
     mess->insert("type", int_message::create(re.type));
@@ -102,10 +102,10 @@ void ServerSocket::sendResult(const submission& sub)
     mess->insert("killed", bool_message::create(re.isKilled));
     mess->insert("output", string_message::create(re.std_out));
     mess->insert("error", string_message::create(re.std_err));
-    log("Inserted result message", LVD2);
-    log("Emitting...", LVD2);
+    lg.log("Inserted result message", LVD2);
+    lg.log("Emitting...", LVD2);
     s->emit("Result", static_pointer_cast<message>(mess));
-    log("Emitted.", LVD2);
+    lg.log("Emitted.", LVD2);
 }
 
 
@@ -119,13 +119,13 @@ void ServerSocket::on_connected()
 {
     ULOCK
     unlocked = true;
-    log("Connected to server.", LVIN);
+    lg.log("Connected to server.", LVIN);
     _cv.notify_all();
 }
 
 void ServerSocket::on_failed()
 {
-    log("on_failed", LVD2);
+    lg.log("on_failed", LVD2);
     if(!_lock.try_lock())
         return;
     else
@@ -134,8 +134,8 @@ void ServerSocket::on_failed()
     failed = true;
     while(!cli.opened())
     {
-        log("Failed to connect to server.", LVER);
-        log("Retry in 60 seconds...", LVIN);
+        lg.log("Failed to connect to server.", LVER);
+        lg.log("Retry in 60 seconds...", LVIN);
         int time = 60;
         while(time--)
         {
@@ -146,7 +146,7 @@ void ServerSocket::on_failed()
             }
             sleep(1);
         }
-        log("Reconnecting...", LVIN);
+        lg.log("Reconnecting...", LVIN);
         _connect();
     }
     failed = false;
@@ -156,12 +156,12 @@ void ServerSocket::on_failed()
 
 void ServerSocket::on_error(const sio::message::ptr& message)
 {
-    log("on_error", LVD2);
+    lg.log("on_error", LVD2);
     ULOCK
     failed = true;
     errored = true;
-    log(message->get_string(), LVFA);
-    log("An error has occurred when connecting to server.");
+    lg.log(message->get_string(), LVFA);
+    lg.log("An error has occurred when connecting to server.");
     _cv.notify_all();
 }
 
@@ -172,20 +172,20 @@ void ServerSocket::on_closed(client::close_reason const& reason)
     {
         while(!cli.opened() && !shutdowned)
         {
-            log("Lost connect to server.", LVER);
-            log("Trying to reconnect...", LVIN);
+            lg.log("Lost connect to server.", LVER);
+            lg.log("Trying to reconnect...", LVIN);
             _connect();
             if(failed)
             {
-                log("Reconnect failed.", LVER);
-                log("Waiting 60 seconds...", LVIN);
+                lg.log("Reconnect failed.", LVER);
+                lg.log("Waiting 60 seconds...", LVIN);
                 sleep(60);
             }
         }
     }
     else
     {
-        log("Disconnected.", LVIN);
+        lg.log("Disconnected.", LVIN);
     }
     unlocked = true;
     _cv.notify_all();
@@ -209,13 +209,13 @@ void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_
     }
     catch(out_of_range ex)
     {
-        log("Server sent a bad submission format!", LVWA);
-        log(ex.what());
+        lg.log("Server sent a bad submission format!", LVWA);
+        lg.log(ex.what());
     }
     catch(exception ex)
     {
-        log("Failed to receive job", LVFA);
-        log(ex.what());
+        lg.log("Failed to receive job", LVFA);
+        lg.log(ex.what());
     }
 }
 

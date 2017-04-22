@@ -5,6 +5,7 @@ std::map<std::string, language> langs;
 
 void loadLangs(std::string confpath)
 {
+    logger lg("LangLoader");
     try{
         config conf(confpath);
         vector<string> list = conf.getSections();
@@ -18,13 +19,13 @@ void loadLangs(std::string confpath)
             l.executer = lconf.getString("Executer");
             l.execargs = lconf.getString("ExecuteArgs");
             langs[name] = l;
-            log("Found language: " + name, LVDE);
+            lg.log("Found language: " + name, LVDE);
         });
     }
     catch (exception ex)
     {
-        log("Error when loading language config", LVER);
-        log(ex.what());
+        lg.log("Error when loading language config", LVER);
+        lg.log(ex.what());
     }
 }
 

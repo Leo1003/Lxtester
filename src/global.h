@@ -1,6 +1,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 #include <string>
+#include "logger.h"
 using std::string;
 
 extern bool daerunning;
@@ -21,5 +22,6 @@ extern string LangFile;
 extern string ServerAddr;
 extern short ServerPort;
 extern string ServerToken;
+extern class logger mainlg;
 
 #endif // GLOBAL_H
