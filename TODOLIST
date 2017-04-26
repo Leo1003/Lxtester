@@ -2,6 +2,7 @@ delete meta file after read it
 make sure the box not to conflict
 limit processing submission count
 not to ignore terminal signal when running in no-daemon mode
+Add cancel function
 notify server when the queue is full
 make AdvFork use pipe to transfer isolate's output
 add debug-level parameter
