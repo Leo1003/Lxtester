@@ -431,6 +431,11 @@ void child_handler(int status)
             s->sendResult(sub);
             lg.log("Successfully sent result.", LVDE);
             pidmap.erase(pidmap.find(chldpid));
+            if(unlink(sub.getOption().metafile.c_str()))
+            {
+                mainlg.log("Unable to delete meta file.", LVWA);
+                mainlg.log(strerror(errno));
+            }
         }
         catch(out_of_range ex)
         {

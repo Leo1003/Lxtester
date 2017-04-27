@@ -1,4 +1,3 @@
-delete meta file after read it
 make sure the box not to conflict
 limit processing submission count
 Add cancel function
