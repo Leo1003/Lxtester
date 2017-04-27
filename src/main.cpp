@@ -303,11 +303,12 @@ int maind()
         }
         mainlg.log("Created directory: meta", LVIN);
     }
-
-    signal(SIGTSTP, SIG_IGN);
-	signal(SIGTTOU, SIG_IGN);
-	signal(SIGTTIN, SIG_IGN);
-	signal(SIGHUP, signal_handler);
+    if (DaemonMode) {
+        signal(SIGTSTP, SIG_IGN);
+        signal(SIGTTOU, SIG_IGN);
+        signal(SIGTTIN, SIG_IGN);
+        signal(SIGHUP, SIG_IGN);
+    }
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
     signal(SIGCHLD, child_handler);
@@ -326,12 +327,12 @@ int maind()
     mainlg.log("Daemon PID: " + to_string(getpid()), LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
     s->connect();
-    mainlg.log("Server Started", LVIN);
     if(!s->getConnected())
     {
         mainlg.log("Can't connect to server.", LVFA);
         exit(1);
     }
+    mainlg.log("Server Started", LVIN);
     try
     {
         while(!stopping)
