@@ -4,6 +4,5 @@ Add cancel function
 notify server when the queue is full
 make AdvFork use pipe to transfer isolate's output
 add debug-level parameter
-also load config from .local file
 config add isolate binary path
 use setproctitle to show special title in htop

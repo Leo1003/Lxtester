@@ -78,6 +78,7 @@ const regex config::reg_empty(R"(^[\s]*$)");
 const regex config::reg_comment(R"(^[\s]*#.*)");
 const regex config::reg_section(R"(^[\s]*\[(.+)\].*)");
 const regex config::reg_setting(R"(^[\s]*([\w]+)[\s]*=[\s]*([\S ]*?)[\s]*$)");
+const regex config::reg_conffile(R"((.+).conf)");
 
 config::config() { }
 
@@ -85,41 +86,10 @@ config::config(std::string path) : config_section()
 {
     try
     {
-        ifstream conf(path);
-        if(conf.fail())
-        {
+        string localpath = regex_replace(path, reg_conffile, "$1.local");
+        if(!LoadFile(path))
             throw ifstream::failure(strerror(errno));
-        }
-        mainlg.log("Loading config: " + path, LVDE);
-        int linec = 0;
-        string buf, secpointer = "_";
-        smatch sm;
-        while(getline(conf, buf))
-        {
-            linec++;
-            if(regex_match(buf, reg_empty) || regex_match(buf, reg_comment))
-                continue;
-            if(regex_match(buf, sm, reg_section))
-            {
-                mainlg.log("Loading section: " + string(sm[1]), LVD2);
-                config_section cs(sm[1]);
-                sec[sm[1]] = cs;
-                seclist.push_back(sm[1]);
-                secpointer = sm[1];
-                continue;
-            }
-            if(regex_match(buf, sm, reg_setting))
-            {
-                if(secpointer == "_")
-                    this->insert(sm[1], sm[2]);
-                else
-                    sec[secpointer].insert(sm[1], sm[2]);
-                continue;
-            }
-            mainlg.log("Can't recognize config file: " + path + " , at line: " + to_string(linec), LVWA);
-        }
-        conf.close();
-        mainlg.log("Loaded config: " + path, LVDE);
+        LoadFile(localpath);
     }
     catch(exception ex)
     {
@@ -127,6 +97,47 @@ config::config(std::string path) : config_section()
         mainlg.log(ex.what());
         throw ex;
     }
+}
+
+bool config::LoadFile(std::string path)
+{
+    ifstream conf(path);
+    if(conf.fail())
+    {
+        return false;
+    }
+    mainlg.log("Loading config: " + path, LVDE);
+    int linec = 0;
+    string buf, secpointer = "_";
+    smatch sm;
+    while(getline(conf, buf))
+    {
+        linec++;
+        if(regex_match(buf, reg_empty) || regex_match(buf, reg_comment))
+            continue;
+        if(regex_match(buf, sm, reg_section))
+        {
+            mainlg.log("Loading section: " + string(sm[1]), LVD2);
+            config_section cs(sm[1]);
+            sec[sm[1]] = cs;
+            seclist.push_back(sm[1]);
+            secpointer = sm[1];
+            continue;
+        }
+        if(regex_match(buf, sm, reg_setting))
+        {
+            if(secpointer == "_")
+                this->insert(sm[1], sm[2]);
+            else
+                sec[secpointer].insert(sm[1], sm[2]);
+            continue;
+        }
+        mainlg.log("Can't recognize config file: " + path + " , at line: " + to_string(linec), LVWA);
+        mainlg.log("Ignore the error.");
+    }
+    conf.close();
+    mainlg.log("Loaded config: " + path, LVDE);
+    return true;
 }
 
 const config_section& config::operator[](std::string key) const

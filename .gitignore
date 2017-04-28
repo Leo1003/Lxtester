@@ -6,5 +6,6 @@ obj/
 *.layout
 *.log
 *.swp
+*.local
 isolate.conf
 

@@ -43,6 +43,8 @@ private:
     static const std::regex reg_comment;
     static const std::regex reg_section;
     static const std::regex reg_setting;
+    static const std::regex reg_conffile;
+    bool LoadFile(std::string path);
     std::vector<std::string> seclist;
     std::map<std::string, config_section> sec;
 };
