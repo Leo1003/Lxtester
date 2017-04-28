@@ -13,6 +13,7 @@
 std::string getSelfPath();
 std::string getConfDir();
 
+bool isExec(std::string path);
 bool isFile(std::string path);
 bool isDir(std::string path);
 

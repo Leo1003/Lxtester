@@ -15,7 +15,6 @@ build: mkdir ./bin/lxtester ./bin/isolate
 .PHONY: ./bin/isolate
 ./bin/isolate: 
 	$(MAKE) -C $(ISODIR)
-	cp ./isolate/isolate ./bin/isolate
 	cp ./isolate/default.cf ./isolate.conf
 
 ./build/global.o:
@@ -36,7 +35,7 @@ mkdir:
 .PHONY: clean
 clean:
 	-rm -rf ./build/*
-	-rm -f ./bin/lxtester
+	-rm -f ./bin/*
 	-rm ./isolate.conf
 	$(MAKE) -C $(ISODIR) clean
 

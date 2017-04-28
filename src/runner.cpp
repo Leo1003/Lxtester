@@ -5,7 +5,7 @@ using namespace std;
 int boxInit(exec_opt option)
 {
     vector<string> args;
-    args.PB("./bin/isolate");
+    args.PB(IsoBinFile);
     args.PB("--init");
     args.PB("--cg");
     args.PB("--box-id=" + to_string(option.id));
@@ -26,7 +26,7 @@ int boxInit(exec_opt option)
 int boxExec(string cmd, exec_opt option, bool enableStdin)
 {
     vector<string> args;
-    args.PB("./bin/isolate");
+    args.PB(IsoBinFile);
     args.PB("--run");
     args.PB("--cg");
     args.PB("--box-id=" + to_string(option.id));
@@ -71,7 +71,7 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
 int boxDel(exec_opt option)
 {
     vector<string> args;
-    args.PB("./bin/isolate");
+    args.PB(IsoBinFile);
     args.PB("--cleanup");
     args.PB("--cg");
     args.PB("--box-id=" + to_string(option.id));

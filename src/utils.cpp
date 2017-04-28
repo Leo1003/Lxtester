@@ -40,14 +40,19 @@ string getConfDir()
     return "";
 }
 
+bool isExec(string path)
+{
+    struct stat st;
+    return (stat(path.c_str(), &st) == 0 &&
+        S_ISREG(st.st_mode) &&
+        st.st_mode & S_IREAD &&
+        st.st_mode & S_IEXEC );
+}
+
 bool isFile(string path)
 {
     struct stat st;
-    if(stat(path.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
-    {
-        return false;
-    }
-    return true;
+    return stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode);
 }
 
 bool isDir(string path)

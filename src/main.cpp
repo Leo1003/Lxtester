@@ -22,6 +22,7 @@ config mainconf;
 ServerSocket *s;
 //Record running submission
 map<pid_t, submission> pidmap;
+bool argdm = false;
 
 int maind();
 void signal_handler(int);
@@ -49,7 +50,7 @@ void ConfigLoader()
         lg.log(ex.what());
         exit(1);
     }
-    if(mainconf.isExist("DaemonMode"))
+    if(!argdm && mainconf.isExist("DaemonMode"))
         DaemonMode = mainconf.getBool("DaemonMode");
     if(mainconf.isExist("PIDFile"))
         PIDFile = mainconf.getString("PIDFile");
@@ -63,6 +64,8 @@ void ConfigLoader()
         LogFile = mainconf.getString("LogFile");
     if(mainconf.isExist("LanguageFile"))
         LangFile = mainconf.getString("LanguageFile");
+    if(mainconf.isExist("IsolatePath"))
+        IsoBinFile = mainconf.getString("IsolatePath");
     if(mainconf.isExist("ServerAddress"))
         ServerAddr = mainconf.getString("ServerAddress");
     if(mainconf.isExist("ServerPort"))
@@ -139,7 +142,6 @@ int main(int argc,char* argv[])
     /*** Parse Arguments ***/
     logger lg("Command");
     int opt;
-    bool argdm = DaemonMode;
     OptType ty = DAE_DEFAULT;
     while((opt = getopt_long(argc, argv, optstring, longopts, NULL)) != -1)
     {
@@ -149,11 +151,13 @@ int main(int argc,char* argv[])
                 if(ty)usage(true);
                 ty = DAE_START;
                 argdm = true;
+                DaemonMode = true;
                 break;
             case 'D':
                 if(ty)usage(true);
                 ty = DAE_START;
-                argdm = false;
+                argdm = true;
+                DaemonMode = false;
                 break;
             case 'r':
                 if(ty)usage(true);
@@ -293,6 +297,11 @@ int maind()
     }
     pidf << getpid() << endl;
     pidf.close();
+    if(!isExec(IsoBinFile))
+    {
+        mainlg.log("Fail to find isolate binary: " + IsoBinFile, LVFA);
+        exit(1);
+    }
     if(!isDir("./meta"))
     {
         if(mkdir("./meta", 0755) == -1)

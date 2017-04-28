@@ -19,6 +19,7 @@ extern string BoxDir;
 extern string WorkingDir;
 extern string LogFile;
 extern string LangFile;
+extern string IsoBinFile;
 extern string ServerAddr;
 extern short ServerPort;
 extern string ServerToken;

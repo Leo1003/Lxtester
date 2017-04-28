@@ -177,12 +177,12 @@ result::result (exec_opt option, meta metas)
     isKilled = metas.isKilled;
     try
     {
-        ifstream outf(BoxDir + "/" + to_string(option.id) + "/box/stdout.mainlg.log");
+        ifstream outf(BoxDir + "/" + to_string(option.id) + "/box/stdout.log");
+        if(outf.fail())
+            throw ifstream::failure(strerror(errno));
         string s;
         while(getline(outf, s))
-        {
             std_out += s + "\n";
-        }
         outf.close();
     }
     catch(exception ex)
@@ -192,12 +192,12 @@ result::result (exec_opt option, meta metas)
     }
     try
     {
-        ifstream errf(BoxDir + "/" + to_string(option.id) + "/box/stderr.mainlg.log");
+        ifstream errf(BoxDir + "/" + to_string(option.id) + "/box/stderr.log");
+        if(errf.fail())
+            throw ifstream::failure(strerror(errno));
         string s;
         while(getline(errf, s))
-        {
             std_err += s + "\n";
-        }
         errf.close();
     }
     catch(exception ex)
