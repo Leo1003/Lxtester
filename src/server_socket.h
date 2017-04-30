@@ -16,14 +16,23 @@
 #include "../lib/sio_socket.h"
 #define ULOCK std::unique_lock<std::mutex> _ul = unique_lock<mutex>(_lock);
 
+enum ConnectionStatus
+{
+    NotConnected,
+    Connected,
+    Failed,
+    Errored,
+    Disconnected
+};
+
 class ServerSocket
 {
 public:
     ServerSocket(std::string host, short port, std::string token);
     ~ServerSocket();
-    bool getConnected() const;
-    int connect();
-    int disconnect();
+    ConnectionStatus getStatus() const;
+    void connect();
+    void disconnect();
     bool getSubmission(submission& sub);
     void sendResult(const submission& sub);
 private:
@@ -31,11 +40,12 @@ private:
     sio::socket::ptr s;
     std::mutex _lock;
     std::condition_variable _cv;
-    bool unlocked, failed, shutdowned, errored;
+    bool unlocked;
     std::string addr;
     std::string token;
     std::queue<submission> jobque;
     logger lg;
+    ConnectionStatus stat;
     
     inline void resetmt();
     void _connect();

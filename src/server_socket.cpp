@@ -10,8 +10,7 @@ ServerSocket::ServerSocket(string host, short port, string token) : lg(logger("S
     this->token = token;
     lg.log("Server address is: " + addr, LVIN);
     resetmt();
-    shutdowned = false;
-    errored = false;
+    stat = NotConnected;
     cli.set_reconnect_attempts(2);
     cli.set_reconnect_delay(2000);
     cli.set_reconnect_delay_max(2000);
@@ -25,24 +24,22 @@ ServerSocket::~ServerSocket()
     disconnect();
 }
 
-int ServerSocket::connect()
+void ServerSocket::connect()
 {
     if(cli.opened())
-        return 0;
+        return;
     _connect();
     ULOCK
-    lg.log("Locked!", LVD2);
     resetmt();
-    if(!unlocked && !failed){
-        lg.log("_cv.wait()...", LVD2);
-        _cv.wait(_ul);}
+    if(!unlocked)
+        _cv.wait(_ul);
     _ul.unlock();
-    if(failed)
-        return 1;
+    if(!cli.opened())
+        return;
+    stat = Connected;
     s = cli.socket("lxtester");
     s->on_error(bind(&ServerSocket::on_error, this, placeholders::_1));
     s->on("Job", bind(&ServerSocket::_job, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4));
-    return 0;
 }
 
 void ServerSocket::_connect()
@@ -52,30 +49,34 @@ void ServerSocket::_connect()
     cli.connect(addr, map<string,string>(), query);
 }
 
-int ServerSocket::disconnect()
+void ServerSocket::disconnect()
 {
     if(!cli.opened())
-        return 127;
+        return;
     ULOCK
     lg.log("Disconnecting from server...", LVIN);
-    shutdowned = true;
     cli.close();
     resetmt();
-    if(!unlocked && !failed)
+    if(!unlocked)
         _cv.wait(_ul);
     _ul.unlock();
-    return 0;
 }
 
-bool ServerSocket::getConnected() const
+ConnectionStatus ServerSocket::getStatus() const
 {
-    return cli.opened();
+    if(stat == Connected)
+    {
+        if(cli.opened())
+            return Connected;
+        else
+            return NotConnected;
+    }
+    else
+        return stat;
 }
 
 bool ServerSocket::getSubmission(submission& sub)
 {
-    if(errored)
-        throw runtime_error("Socket Error");
     ULOCK
     if(jobque.empty())
     {
@@ -112,13 +113,13 @@ void ServerSocket::sendResult(const submission& sub)
 inline void ServerSocket::resetmt()
 {
     unlocked = false;
-    failed = false;
 }
 
 void ServerSocket::on_connected()
 {
     ULOCK
     unlocked = true;
+    stat = Connected;
     lg.log("Connected to server.", LVIN);
     _cv.notify_all();
 }
@@ -126,32 +127,9 @@ void ServerSocket::on_connected()
 void ServerSocket::on_failed()
 {
     lg.log("on_failed", LVD2);
-    if(!_lock.try_lock())
-        return;
-    else
-        _lock.unlock();
     ULOCK
-    failed = true;
-    while(!cli.opened())
-    {
-        lg.log("Failed to connect to server.", LVER);
-        lg.log("Retry in 60 seconds...", LVIN);
-        int time = 60;
-        while(time--)
-        {
-            if(stopping)
-            {
-                _cv.notify_all();
-                return;
-            }
-            sleep(1);
-        }
-        lg.log("Reconnecting...", LVIN);
-        _connect();
-        lg.log("Reconnected", LVIN);
-    }
-    failed = false;
-    unlocked = true;
+    stat = Failed;
+     unlocked = true;
     _cv.notify_all();
 }
 
@@ -159,8 +137,8 @@ void ServerSocket::on_error(const sio::message::ptr& message)
 {
     lg.log("on_error", LVD2);
     ULOCK
-    failed = true;
-    errored = true;
+    unlocked = true;
+    stat = Errored;
     lg.log(message->get_string(), LVFA);
     lg.log("An error has occurred when connecting to server.");
     _cv.notify_all();
@@ -171,21 +149,12 @@ void ServerSocket::on_closed(client::close_reason const& reason)
     ULOCK
     if(reason != client::close_reason_normal)
     {
-        while(!cli.opened() && !shutdowned)
-        {
-            lg.log("Lost connect to server.", LVER);
-            lg.log("Trying to reconnect...", LVIN);
-            _connect();
-            if(failed)
-            {
-                lg.log("Reconnect failed.", LVER);
-                lg.log("Waiting 60 seconds...", LVIN);
-                sleep(60);
-            }
-        }
+        stat = Failed;
+        lg.log("Abnormal Disconnected.", LVWA);
     }
     else
     {
+        stat = Disconnected;
         lg.log("Disconnected.", LVIN);
     }
     unlocked = true;

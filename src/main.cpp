@@ -25,6 +25,7 @@ map<pid_t, submission> pidmap;
 bool argdm = false;
 
 int maind();
+void reconnect();
 void signal_handler(int);
 void child_handler(int);
 pid_t testWorkFlow(submission& sub);
@@ -334,34 +335,53 @@ int maind()
         exit(1);
     }
     mainlg.log("Daemon PID: " + to_string(getpid()), LVIN);
+    mainlg.log("Daemon Started", LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
     s->connect();
-    if(!s->getConnected())
+    while(!stopping)
     {
-        mainlg.log("Can't connect to server.", LVFA);
-        exit(1);
-    }
-    mainlg.log("Server Started", LVIN);
-    try
-    {
-        while(!stopping)
+        switch(s->getStatus())
         {
-            submission sub;
-            if(s->getSubmission(sub))
-            {
-                mainlg.log("Received submission, ID : " + to_string(sub.getId()), LVIN);
-                testWorkFlow(sub);
-            }
-            else
-                sleep(1);
+            case NotConnected:
+            case Failed:
+            case Disconnected:
+                reconnect();
+                continue;
+            case Errored:
+                mainlg.log("Authorized Errored, ", LVFA);
+                exit(1);
+            case Connected:
+                break;
         }
+        submission sub;
+        if(s->getSubmission(sub))
+        {
+            mainlg.log("Received submission, ID : " + to_string(sub.getId()), LVIN);
+            testWorkFlow(sub);
+        }
+        else
+            sleep(1);
     }
-    catch(runtime_error ex)
-    {
-        mainlg.log("connection lost.", LVFA);
-    }
-    mainlg.log("Server stopped.", LVIN);
+    s->disconnect();
+    mainlg.log("Daemon stopped.", LVIN);
     return 0;
+}
+
+void reconnect()
+{
+    mainlg.log("Failed to connect to server.", LVER);
+    mainlg.log("Retry in 60 seconds...", LVIN);
+    int time = 60;
+    while(time--)
+    {
+        if(stopping)
+        {
+            break;
+        }
+        sleep(1);
+    }
+    mainlg.log("Reconnecting...", LVIN);
+    s->connect();
 }
 
 void signal_handler(int sig)
