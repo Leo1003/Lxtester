@@ -7,7 +7,7 @@ using boost::format;
  * class submission
  * -------------------------*/
 
-submission::submission() {}
+submission::submission() : opt(-1) {}
 submission::submission(int id, string lang, string exe, string src)
 {
     this->id = id;
@@ -15,7 +15,6 @@ submission::submission(int id, string lang, string exe, string src)
     this->srcname = src;
     this->lang = getLang(lang);
     
-    opt.id = id % 100;
     opt.fsize = 65536;
     opt.time = 30;
     opt.mem = 131072;
@@ -91,7 +90,7 @@ pid_t submission::getPID() const
     return pid;
 }
 
-exec_opt submission::getOption() const
+exec_opt& submission::getOption()
 {
     return opt;
 }
@@ -108,11 +107,13 @@ void submission::setResult(result res)
 
 int submission::compile()
 {
-    ofstream code(BoxDir + "/" + to_string(opt.id) + "/box/" + srcname);
+    string path = BoxDir + "/" + to_string(opt.getId()) + "/box/" + srcname;
+    ofstream code(path);
+    mainlg.log("Source file: " + path, LVD2);
     if(!code)
     {
         mainlg.log("Failed to opened code file.", LVER);
-        mainlg.log("Box id: " + to_string(opt.id));
+        mainlg.log("Box id: " + to_string(opt.getId()));
         return -1;
     }
     code << this->code;
@@ -122,8 +123,7 @@ int submission::compile()
     if (!lang.needComplie)
         return 0;
     
-    exec_opt compile_opt;
-    compile_opt.id = opt.id;
+    exec_opt compile_opt(opt.getId());
     compile_opt.mem = 262144;
     compile_opt.fsize = opt.fsize;
     compile_opt.metafile = opt.metafile;
@@ -137,11 +137,13 @@ int submission::compile()
 
 int submission::execute()
 {
-    ofstream infile(BoxDir + "/" + to_string(opt.id) + "/box/" + opt.std_in);
+    string path = BoxDir + "/" + to_string(opt.getId()) + "/box/" + opt.std_in;
+    ofstream infile(path);
+    mainlg.log("Stdin file: " + path, LVD2);
     if(!infile)
     {
         mainlg.log("Failed to opened stdin file.", LVER);
-        mainlg.log("Box id: " + to_string(opt.id));
+        mainlg.log("Box id: " + to_string(opt.getId()));
         return -1;
     }
     infile << this->opt.std_in;
@@ -168,7 +170,7 @@ result::result()
     type = TYPE_FAILED;
 }
 
-result::result (exec_opt option, meta metas)
+result::result (int boxid, meta metas)
 {
     time = metas.time_wall;
     mem = metas.max_rss;
@@ -177,7 +179,7 @@ result::result (exec_opt option, meta metas)
     isKilled = metas.isKilled;
     try
     {
-        ifstream outf(BoxDir + "/" + to_string(option.id) + "/box/stdout.log");
+        ifstream outf(BoxDir + "/" + to_string(boxid) + "/box/stdout.log");
         if(outf.fail())
             throw ifstream::failure(strerror(errno));
         string s;
@@ -192,7 +194,7 @@ result::result (exec_opt option, meta metas)
     }
     try
     {
-        ifstream errf(BoxDir + "/" + to_string(option.id) + "/box/stderr.log");
+        ifstream errf(BoxDir + "/" + to_string(boxid) + "/box/stderr.log");
         if(errf.fail())
             throw ifstream::failure(strerror(errno));
         string s;

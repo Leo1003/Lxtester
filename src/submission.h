@@ -1,5 +1,6 @@
 #ifndef SUBMISSION_H
 #define SUBMISSION_H
+#include <bitset>
 #include <string>
 #include <boost/format.hpp>
 #include "global.h"
@@ -22,7 +23,7 @@ struct result
     bool isKilled;
     RESULT_TYPE type;
     result();
-    result(exec_opt option, meta metas);
+    result(int boxid, meta metas);
 };
 
 class submission
@@ -32,7 +33,7 @@ public:
     submission(int id, std::string lang, std::string exe, std::string src);
     int getId() const;
     pid_t getPID() const;
-    exec_opt getOption() const;
+    exec_opt& getOption();
     result getResult() const;
     void setResult(result res);
     std::string getCode() const;

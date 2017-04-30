@@ -2,13 +2,13 @@
 #define PB push_back
 using namespace std;
 
-int boxInit(exec_opt option)
+int boxInit(exec_opt& option)
 {
     vector<string> args;
     args.PB(IsoBinFile);
     args.PB("--init");
     args.PB("--cg");
-    args.PB("--box-id=" + to_string(option.id));
+    args.PB("--box-id=" + to_string(option.getId()));
     
     char** argp = parseVecstr(args);
 
@@ -23,13 +23,13 @@ int boxInit(exec_opt option)
         return 255;
 }
 
-int boxExec(string cmd, exec_opt option, bool enableStdin)
+int boxExec(string cmd, exec_opt& option, bool enableStdin)
 {
     vector<string> args;
     args.PB(IsoBinFile);
     args.PB("--run");
     args.PB("--cg");
-    args.PB("--box-id=" + to_string(option.id));
+    args.PB("--box-id=" + to_string(option.getId()));
     args.PB("--time=" + to_string(option.time));
     args.PB("--wall-time=" + to_string(option.time));
     args.PB("--mem=" + to_string(option.mem));
@@ -68,13 +68,13 @@ int boxExec(string cmd, exec_opt option, bool enableStdin)
         return 255;
 }
 
-int boxDel(exec_opt option)
+int boxDel(exec_opt& option)
 {
     vector<string> args;
     args.PB(IsoBinFile);
     args.PB("--cleanup");
     args.PB("--cg");
-    args.PB("--box-id=" + to_string(option.id));
+    args.PB("--box-id=" + to_string(option.getId()));
 
     char** argp = parseVecstr(args);
 
@@ -135,6 +135,79 @@ int advFork(char** argp, pid_t& pid, bool wait)
     }
     
     return status;
+}
+
+bitset<100> exec_opt::boxslist;
+exec_opt::exec_opt()
+{
+    id = registbox();
+    registedID = true;
+}
+
+exec_opt::exec_opt(int id)
+{
+    this->id = id;
+    registedID = false;
+}
+
+exec_opt::exec_opt(exec_opt && old)
+{
+    this->id = old.id;
+    this->registedID = old.registedID;
+    fsize = old.fsize;
+    time = old.time;
+    mem = old.mem;
+    processes = old.processes;
+    stack = old.stack;
+    metafile = old.metafile;
+    std_in = old.std_in;
+    
+    old.id = -1;
+    old.registedID = false;
+}
+
+exec_opt & exec_opt::operator=(exec_opt && old)
+{
+    if (this != &old)
+    {
+        this->id = old.id;
+        this->registedID = old.registedID;
+        fsize = old.fsize;
+        time = old.time;
+        mem = old.mem;
+        processes = old.processes;
+        stack = old.stack;
+        metafile = old.metafile;
+        std_in = old.std_in;
+        
+        old.id = -1;
+        old.registedID = false;
+    }
+}
+
+exec_opt::~exec_opt()
+{
+    if(registedID)
+        boxslist.reset(id);
+}
+
+int exec_opt::getId()
+{
+    return id;
+}
+
+int exec_opt::registbox()
+{
+    for(int i = 0; i < 100; i++)
+    {
+        if(!boxslist.test(i))
+        {
+            boxslist.set(i);
+            mainlg.log("RegistID: " + to_string(i), LVDE);
+            return i;
+        }
+    }
+    return -1;
 }
 
 meta::meta() 

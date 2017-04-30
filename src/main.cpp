@@ -392,7 +392,7 @@ void child_handler(int status)
         mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVD2);
         try
         {
-            submission sub = pidmap.at(chldpid);
+            submission sub = move(pidmap.at(chldpid));
             logger lg("Worker" + to_string(sub.getId()));
             if(WIFEXITED(chldsta))
             {
@@ -406,7 +406,7 @@ void child_handler(int status)
                         case TYPE_COMPILATION:
                         case TYPE_EXECUTION:
                             mf = meta(sub.getOption().metafile);
-                            res = result(sub.getOption(), mf);
+                            res = result(sub.getOption().getId(), mf);
                             res.type = resty;
                             break;
                     }
@@ -431,10 +431,10 @@ void child_handler(int status)
             if(boxDel(sub.getOption()))
             {
                 lg.log("Unable to remove box.", LVER);
-                lg.log("Box id: " + to_string(sub.getOption().id));
+                lg.log("Box id: " + to_string(sub.getOption().getId()));
             }
             signal(SIGCHLD, rawsig);
-            lg.log("Box id: " + to_string(sub.getOption().id) + " removed.", LVDE);
+            lg.log("Box id: " + to_string(sub.getOption().getId()) + " removed.", LVDE);
             //sendResult
             lg.log("Sending result.", LVDE);
             s->sendResult(sub);
@@ -459,7 +459,7 @@ pid_t testWorkFlow(submission& sub)
     pid_t pid = fork();
     if(pid > 0)
     {
-        pidmap[pid] = sub;
+        pidmap[pid] = move(sub);
     }
     else if(pid == 0)
     {
@@ -473,12 +473,12 @@ pid_t testWorkFlow(submission& sub)
         if(boxInit(sub.getOption())) 
         {
             mainlg.log("Unable to create box.", LVER);
-            mainlg.log("Box id: " + to_string(sub.getOption().id));
+            mainlg.log("Box id: " + to_string(sub.getOption().getId()));
             exit(2);
         }
         else
         {
-            mainlg.log("Box id: " + to_string(sub.getOption().id) + " created.", LVDE);
+            mainlg.log("Box id: " + to_string(sub.getOption().getId()) + " created.", LVDE);
         }
         int compsta = sub.compile();
         int state = 0;

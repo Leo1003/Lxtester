@@ -81,7 +81,7 @@ bool ServerSocket::getSubmission(submission& sub)
     {
         return false;
     }
-    sub = jobque.front();
+    sub = move(jobque.front());
     jobque.pop();
     return true;
 }
@@ -148,6 +148,7 @@ void ServerSocket::on_failed()
         }
         lg.log("Reconnecting...", LVIN);
         _connect();
+        lg.log("Reconnected", LVIN);
     }
     failed = false;
     unlocked = true;
@@ -205,7 +206,7 @@ void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_
 
         sub.setCode(msg.at("code")->get_string());
         sub.setStdin(msg.at("stdin")->get_string());
-        jobque.push(sub);
+        jobque.push(move(sub));
     }
     catch(out_of_range ex)
     {
