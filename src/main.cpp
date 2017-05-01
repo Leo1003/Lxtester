@@ -496,20 +496,25 @@ pid_t testWorkFlow(submission& sub)
             mainlg.log("Box id: " + to_string(sub.getOption().getId()));
             exit(2);
         }
-        else
+        mainlg.log("Box id: " + to_string(sub.getOption().getId()) + " created.", LVDE);
+
+        try
         {
-            mainlg.log("Box id: " + to_string(sub.getOption().getId()) + " created.", LVDE);
+            if(sub.compile())
+            {
+                mainlg.log("Compile Failed.", LVWA);
+                exit(1);
+            }
+            else
+                sub.execute();
         }
-        int compsta = sub.compile();
-        int state = 0;
-        if(compsta)
+        catch(exception ex)
         {
-            mainlg.log("Compile Failed.", LVWA);
-            state = 1;
+            mainlg.log("Failed when execute submission.", LVER);
+            mainlg.log(ex.what());
+            exit(2);
         }
-        else
-            sub.execute();
-        exit(state);
+        exit(0);
     }
     else
     {

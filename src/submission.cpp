@@ -114,7 +114,7 @@ int submission::compile()
     {
         mainlg.log("Failed to opened code file.", LVER);
         mainlg.log("Box id: " + to_string(opt.getId()));
-        return -1;
+        throw ifstream::failure(strerror(errno));
     }
     code << this->code;
     code.flush();
@@ -144,7 +144,7 @@ int submission::execute()
     {
         mainlg.log("Failed to opened stdin file.", LVER);
         mainlg.log("Box id: " + to_string(opt.getId()));
-        return -1;
+        throw ifstream::failure(strerror(errno));
     }
     infile << this->opt.std_in;
     infile.flush();

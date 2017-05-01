@@ -229,9 +229,7 @@ meta::meta (string metafile)
 {
     ifstream mf(metafile);
     if(mf.fail())
-    {
         throw ifstream::failure(strerror(errno));
-    }
     map<string, string> m;
     string buff;
     while(getline(mf, buff))
@@ -248,8 +246,8 @@ meta::meta (string metafile)
         csw_forced = tryParsell(m["csw-forced"]);
         csw_voluntary = tryParsell(m["csw-voluntary"]);
         max_rss = tryParsell(m["max-rss"]);
-        time = tryParsell(m["time"], -1);
-        time_wall = tryParsell(m["time-wall"], -1);
+        time = tryParsed(m["time"], -1) * 1000;
+        time_wall = tryParsed(m["time-wall"], -1) * 1000;
         exitcode = tryParse(m["exitcode"]);
         exitsig = tryParse(m["exitsig"]);
         isKilled = tryParse(m["killed"]);

@@ -97,6 +97,22 @@ long long tryParsell(string str, long long def)
     }
 }
 
+double tryParsed(string str, double def)
+{
+    try
+    {
+        if(str == "")
+            return def;
+        return stod(str);
+    }
+    catch(invalid_argument ex)
+    {
+        mainlg.log("Parsing string error:", LVER);
+        mainlg.log(ex.what());
+        return def;
+    }
+}
+
 string trim(const string& str)
 {
     size_t first = str.find_first_not_of(' ');
