@@ -348,7 +348,7 @@ int maind()
                 reconnect();
                 continue;
             case Errored:
-                mainlg.log("Authorized Errored, ", LVFA);
+                mainlg.log("Socket Errored, ", LVFA);
                 exit(1);
             case Connected:
                 break;
@@ -370,13 +370,13 @@ int maind()
 void reconnect()
 {
     mainlg.log("Failed to connect to server.", LVER);
-    mainlg.log("Retry in 60 seconds...", LVIN);
-    int time = 60;
+    mainlg.log("Retry in 30 seconds...", LVIN);
+    int time = 30;
     while(time--)
     {
         if(stopping)
         {
-            break;
+            return;
         }
         sleep(1);
     }
