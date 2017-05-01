@@ -354,13 +354,25 @@ int maind()
                 break;
         }
         submission sub;
-        if(s->getSubmission(sub))
+        if(pidmap.size() < 10 && s->getSubmission(sub))
         {
             mainlg.log("Received submission, ID : " + to_string(sub.getId()), LVIN);
             testWorkFlow(sub);
+            mainlg.log("Sent to workflow!", LVD2);
         }
         else
+        {
+            if(pidmap.size() >= 10)
+            {
+                string s = "PIDMAP: ";
+                for(auto& i:pidmap)
+                {
+                    s += to_string(i.first) + ", ";
+                }
+                mainlg.log(s, LVD2);
+            }
             sleep(1);
+        }
     }
     s->disconnect();
     mainlg.log("Daemon stopped.", LVIN);
@@ -407,13 +419,14 @@ void child_handler(int status)
 {
     int chldsta;
     pid_t chldpid;
+    mainlg.log("Received SIGCHLD!", LVD2);
     while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0)
     {
         mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVD2);
         try
         {
             submission sub = move(pidmap.at(chldpid));
-            logger lg("Worker" + to_string(sub.getId()));
+            logger lg("Worker" + to_string(sub.getOption().getId()));
             if(WIFEXITED(chldsta))
             {
                 try
@@ -447,13 +460,13 @@ void child_handler(int status)
                 lg.log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
             }
             //remove sandbox
-            sighandler_t rawsig = signal(SIGCHLD, SIG_DFL);
+            //sighandler_t rawsig = signal(SIGCHLD, SIG_DFL);
             if(boxDel(sub.getOption()))
             {
                 lg.log("Unable to remove box.", LVER);
                 lg.log("Box id: " + to_string(sub.getOption().getId()));
             }
-            signal(SIGCHLD, rawsig);
+            //signal(SIGCHLD, rawsig);
             lg.log("Box id: " + to_string(sub.getOption().getId()) + " removed.", LVDE);
             //sendResult
             lg.log("Sending result.", LVDE);
@@ -468,23 +481,26 @@ void child_handler(int status)
         }
         catch(out_of_range ex)
         {
-            mainlg.log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
+            //mainlg.log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
             continue;
         }
     }
+    mainlg.log("Exit child handler", LVD2);
 }
 
 pid_t testWorkFlow(submission& sub)
 {
     pid_t pid = fork();
+    mainlg.log("Forked", LVD2);
     if(pid > 0)
     {
         pidmap[pid] = move(sub);
+        mainlg.log("Moved", LVD2);
     }
     else if(pid == 0)
     {
         //set child environment
-        mainlg = logger("Worker" + to_string(sub.getId()));
+        mainlg = logger("Worker" + to_string(sub.getOption().getId()));
         signal(SIGCHLD, SIG_DFL);
         signal(SIGHUP, SIG_DFL);
         signal(SIGINT, SIG_DFL);
@@ -521,6 +537,7 @@ pid_t testWorkFlow(submission& sub)
         mainlg.log("Unable to fork.", LVFA);
         mainlg.log(strerror(errno));
     }
+    mainlg.log("Returning", LVD2);
     return pid;
 }
 

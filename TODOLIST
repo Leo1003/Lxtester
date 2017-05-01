@@ -1,4 +1,3 @@
-limit processing submission count
 Add cancel function
 notify server when the queue is full
 make AdvFork use pipe to transfer isolate's output

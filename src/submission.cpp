@@ -20,7 +20,7 @@ submission::submission(int id, string lang, string exe, string src)
     opt.mem = 131072;
     opt.processes = 1;
     opt.stack = 256;
-    opt.metafile = "./meta/task" + to_string(id);
+    opt.metafile = "./meta/task" + to_string(opt.getId());
     opt.std_in = "stdin.txt";
 }
 

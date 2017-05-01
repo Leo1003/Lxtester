@@ -183,6 +183,7 @@ exec_opt & exec_opt::operator=(exec_opt && old)
         old.id = -1;
         old.registedID = false;
     }
+    return *this;
 }
 
 exec_opt::~exec_opt()
