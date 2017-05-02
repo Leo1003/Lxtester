@@ -113,6 +113,24 @@ double tryParsed(string str, double def)
     }
 }
 
+loglevel tryParseLevel(string str)
+{
+    if (str == "Fatal")
+        return LVFA;
+    else if (str == "Error")
+        return LVER;
+    else if (str == "Warn")
+        return LVWA;
+    else if (str == "Info")
+        return LVIN;
+    else if (str == "Debug")
+        return LVDE;
+    else if (str == "Debug2")
+        return LVD2;
+    else
+        return (loglevel)-1;
+}
+
 string trim(const string& str)
 {
     size_t first = str.find_first_not_of(' ');

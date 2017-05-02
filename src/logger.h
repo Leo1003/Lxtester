@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "utils.h"
 using namespace std;
 
 enum loglevel

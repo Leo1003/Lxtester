@@ -20,6 +20,7 @@ bool isDir(std::string path);
 int tryParse(std::string str, int def = 0);
 long long tryParsell(std::string str, long long def = 0);
 double tryParsed(std::string str, double def = 0);
+loglevel tryParseLevel(std::string str);
 
 std::string trim(const std::string& str);
 

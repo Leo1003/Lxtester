@@ -22,7 +22,7 @@ config mainconf;
 ServerSocket *s;
 //Record running submission
 map<pid_t, submission> pidmap;
-bool argdm = false;
+bool argdm = false, arglv = false;
 
 int maind();
 void reconnect();
@@ -73,7 +73,7 @@ void ConfigLoader()
         ServerPort = mainconf.getInt("ServerPort");
     if(mainconf.isExist("ServerToken"))
         ServerToken = mainconf.getString("ServerToken");
-    if(mainconf.isExist("DebugLevel"))
+    if(!arglv && mainconf.isExist("DebugLevel"))
         logger::setGlobalLevel((loglevel)mainconf.getInt("DebugLevel"));
 }
 
@@ -100,12 +100,13 @@ bool DetectDaemon()
     return daerunning;
 }
 
-const char optstring[] = "DdhKrRs";
+const char optstring[] = "Ddl:hKrRs";
 
 const struct option longopts[] = {
     {"daemon",      no_argument,        NULL,'d'},
     {"kill",        no_argument,        NULL,'K'},
     {"no-daemon",   no_argument,        NULL,'D'},
+    {"loglevel",    required_argument,  NULL,'l'},
     {"help",        no_argument,        NULL,'h'},
     {"reload",      no_argument,        NULL,'r'},
     {"restart",     no_argument,        NULL,'R'},
@@ -133,6 +134,7 @@ void usage(bool wa = false)
     printf("\t--stop, -s \t\tStop the background daemon.\n");
     printf("\t--restart, -R \t\tRestart the background daemon.\n");
     printf("\t--kill, -K \t\tKill the background daemon directly without waiting it to shutdown.\n");
+    printf("\t--loglevel, -l \t\tSet the log output's level.\n");
     printf("\t--help, -h \t\tShow this help.\n");
     if(wa) exit(3);
     else exit(0);
@@ -142,8 +144,10 @@ int main(int argc,char* argv[])
 {
     /*** Parse Arguments ***/
     logger lg("Command");
+    loglevel loglv;
     int opt;
     OptType ty = DAE_DEFAULT;
+    const char * errstr;
     while((opt = getopt_long(argc, argv, optstring, longopts, NULL)) != -1)
     {
         switch(opt)
@@ -176,8 +180,28 @@ int main(int argc,char* argv[])
                 if(ty)usage(true);
                 ty = DAE_KILL;
                 break;
+            case 'l':
+                arglv = true;
+                loglv = (loglevel)tryParse(optarg, -1);
+                if (loglv == -1)
+                {
+                    loglv = tryParseLevel(optarg); 
+                }
+                if (loglv == -1)
+                {
+                    mainlg.log(errstr, LVER);
+                    usage(true);
+                }
+                else
+                {
+                    arglv = true;
+                    logger::setGlobalLevel(loglv);
+                }
+                break;
             case '?':
+            case ':':
                 usage(true);
+                break;
             case 'h':
             default:
                 usage();
