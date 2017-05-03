@@ -160,11 +160,11 @@ int submission::execute()
 
 result::result() 
 { 
-    time = 0;
-    mem = 0;
+    time = -1;
+    mem = -1;
     exitcode = 0;
     signal = 0;
-    isKilled = false;
+    isKilled = true;
     std_out = "";
     std_err = "";
     type = TYPE_FAILED;
