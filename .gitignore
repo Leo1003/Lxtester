@@ -8,4 +8,5 @@ obj/
 *.swp
 *.local
 isolate.conf
+*.kate-swp
 
