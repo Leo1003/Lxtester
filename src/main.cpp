@@ -380,20 +380,7 @@ int maind()
             mainlg.log("Sent to workflow!", LVD2);
         }
         else
-        {
-            /*
-            if(pidmap.size() >= 10)
-            {
-                string s = "PIDMAP: ";
-                for(auto& i:pidmap)
-                {
-                    s += to_string(i.first) + ", ";
-                }
-                mainlg.log(s, LVD2);  
-            }
-            */
             sleep(1);
-        }
     }
     s->disconnect();
     mainlg.log("Daemon stopped.", LVIN);
