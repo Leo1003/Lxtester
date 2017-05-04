@@ -22,12 +22,12 @@ config mainconf;
 ServerSocket *s;
 //Record running submission
 map<pid_t, submission> pidmap;
-bool argdm = false, arglv = false;
+bool argdm = false, arglv = false, sigchild = false;
 
 int maind();
 void reconnect();
 void signal_handler(int);
-void child_handler(int);
+void child_handler();
 pid_t testWorkFlow(submission& sub);
 logger mainlg("MainProc");
 
@@ -147,7 +147,6 @@ int main(int argc,char* argv[])
     loglevel loglv;
     int opt;
     OptType ty = DAE_DEFAULT;
-    const char * errstr;
     while((opt = getopt_long(argc, argv, optstring, longopts, NULL)) != -1)
     {
         switch(opt)
@@ -181,17 +180,11 @@ int main(int argc,char* argv[])
                 ty = DAE_KILL;
                 break;
             case 'l':
-                arglv = true;
                 loglv = (loglevel)tryParse(optarg, -1);
-                if (loglv == -1)
-                {
-                    loglv = tryParseLevel(optarg); 
-                }
-                if (loglv == -1)
-                {
-                    mainlg.log(errstr, LVER);
+                if (loglv == LVUNDEF)
+                    loglv = tryParseLevel(optarg);
+                if (loglv == LVUNDEF)
                     usage(true);
-                }
                 else
                 {
                     arglv = true;
@@ -345,7 +338,7 @@ int maind()
     }
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
-    signal(SIGCHLD, child_handler);
+    signal(SIGCHLD, signal_handler);
     
     try
     {
@@ -364,6 +357,8 @@ int maind()
     s->connect();
     while(!stopping)
     {
+        if (sigchild)
+            child_handler();
         switch(s->getStatus())
         {
             case NotConnected:
@@ -386,6 +381,7 @@ int maind()
         }
         else
         {
+            /*
             if(pidmap.size() >= 10)
             {
                 string s = "PIDMAP: ";
@@ -393,8 +389,9 @@ int maind()
                 {
                     s += to_string(i.first) + ", ";
                 }
-                mainlg.log(s, LVD2);
+                mainlg.log(s, LVD2);  
             }
+            */
             sleep(1);
         }
     }
@@ -435,15 +432,17 @@ void signal_handler(int sig)
             mainlg.log("Stopping lxtester server...", LVIN);
             stopping = 1;
             break;
+        case SIGCHLD:
+            sigchild = true;
+            break;
     }
     return;
 }
 
-void child_handler(int status)
+void child_handler()
 {
     int chldsta;
     pid_t chldpid;
-    mainlg.log("Received SIGCHLD!", LVD2);
     while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0)
     {
         mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVD2);
@@ -505,22 +504,18 @@ void child_handler(int status)
         }
         catch(out_of_range ex)
         {
-            //mainlg.log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
+            mainlg.log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
             continue;
         }
     }
-    mainlg.log("Exit child handler", LVD2);
+    sigchild = false;
 }
 
 pid_t testWorkFlow(submission& sub)
 {
     pid_t pid = fork();
-    mainlg.log("Forked", LVD2);
     if(pid > 0)
-    {
         pidmap[pid] = move(sub);
-        mainlg.log("Moved", LVD2);
-    }
     else if(pid == 0)
     {
         //set child environment
@@ -561,7 +556,6 @@ pid_t testWorkFlow(submission& sub)
         mainlg.log("Unable to fork.", LVFA);
         mainlg.log(strerror(errno));
     }
-    mainlg.log("Returning", LVD2);
     return pid;
 }
 

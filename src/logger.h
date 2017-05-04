@@ -8,6 +8,7 @@ using namespace std;
 
 enum loglevel
 {
+    LVUNDEF = -1,
     LVD2,
     LVDE,
     LVIN,
