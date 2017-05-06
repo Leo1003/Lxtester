@@ -9,4 +9,4 @@ obj/
 *.local
 isolate.conf
 *.kate-swp
-
+lxtester.kdev4
