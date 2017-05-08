@@ -209,7 +209,7 @@ int main(int argc,char* argv[])
 
     ConfigLoader();
     DaemonMode = argdm; //prevent daemonmode config override argument
-    
+
     DetectDaemon();
 
     switch(ty)
@@ -339,7 +339,7 @@ int maind()
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
     signal(SIGCHLD, signal_handler);
-    
+
     try
     {
         loadLangs(LangFile);
@@ -432,7 +432,7 @@ void child_handler()
     pid_t chldpid;
     while(chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0)
     {
-        mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVD2);
+        mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVDE);
         try
         {
             submission sub = move(pidmap.at(chldpid));
@@ -481,7 +481,7 @@ void child_handler()
             //sendResult
             lg.log("Sending result.", LVDE);
             s->sendResult(sub);
-            lg.log("Successfully sent result.", LVDE);
+            lg.log("Successfully sent result, ID: " + to_string(sub.getId()), LVIN);
             pidmap.erase(pidmap.find(chldpid));
             if(unlink(sub.getOption().metafile.c_str()))
             {
@@ -512,7 +512,7 @@ pid_t testWorkFlow(submission& sub)
         signal(SIGINT, SIG_DFL);
         signal(SIGTERM, SIG_DFL);
         //create sandbox
-        if(boxInit(sub.getOption())) 
+        if(boxInit(sub.getOption()))
         {
             mainlg.log("Unable to create box.", LVER);
             mainlg.log("Box id: " + to_string(sub.getOption().getId()));
@@ -524,11 +524,12 @@ pid_t testWorkFlow(submission& sub)
         {
             if(sub.compile())
             {
-                mainlg.log("Compile Failed.", LVWA);
+                mainlg.log("Compile Failed, ID: " + to_string(sub.getId()), LVWA);
                 exit(1);
             }
             else
                 sub.execute();
+            mainlg.log("Submission Completed, ID: " + to_string(sub.getId()), LVIN);
         }
         catch(exception ex)
         {

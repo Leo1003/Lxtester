@@ -9,14 +9,14 @@ int boxInit(exec_opt& option)
     args.PB("--init");
     args.PB("--cg");
     args.PB("--box-id=" + to_string(option.getId()));
-    
+
     char** argp = parseVecstr(args);
 
     pid_t pid;
     int status = advFork(argp, pid);
-    
+
     delCStrings(argp);
-    
+
     if(WIFEXITED(status))
         return WEXITSTATUS(status);
     else
@@ -43,7 +43,7 @@ int boxExec(string cmd, exec_opt& option, bool enableStdin)
     args.PB("--meta=" + option.metafile);
     args.PB("--full-env");
     args.PB("--");
-    
+
     //split cmd string into vector<string>
     cmd = trim(cmd);
     mainlg.log("SandboxExec: CMD = \"" + cmd + "\"", LVD2);
@@ -54,12 +54,12 @@ int boxExec(string cmd, exec_opt& option, bool enableStdin)
         ss >> tmp;
         args.PB(tmp);
     }
-    
+
     char** argp = parseVecstr(args);
-    
+
     pid_t pid;
     int status = advFork(argp, pid);
-    
+
     delCStrings(argp);
 
     if(WIFEXITED(status))
@@ -80,16 +80,16 @@ int boxDel(exec_opt& option)
 
     pid_t pid;
     int status = advFork(argp, pid);
-    
+
     delCStrings(argp);
-    
+
     if(WIFEXITED(status))
         return WEXITSTATUS(status);
     else
         return 255;
 }
 
-int advFork(char** argp, pid_t& pid, bool wait)
+int advFork(char** argp, pid_t& pid)
 {
     if(logger::getGlobalLevel() <= LVDE)
     {
@@ -107,24 +107,58 @@ int advFork(char** argp, pid_t& pid, bool wait)
     }
 
     int status = 0;
+    bool p = false;
+    int pipefd[2];
+    if(pipe(pipefd) == -1)
+    {
+        mainlg.log("Advfork: Failed to create pipe", LVER);
+        mainlg.log(strerror(errno));
+    }
+    else
+        p = true;
+
     pid = fork();
     if(pid == 0)
     {
         //child process
+        close(0);
+        open("/dev/null", O_RDONLY);
+        if(p)
+        {
+            close(pipefd[0]);
+            close(1);
+            close(2);
+            dup2(pipefd[1], 1);
+            dup2(pipefd[1], 2);
+        }
         execvp(argp[0], argp);
         mainlg.log("Failed to exec.", LVFA);
         exit(127);
     }
     else if(pid > 0)
     {
-        mainlg.log("Child PID: " + to_string(pid));
+        mainlg.log("Child PID: " + to_string(pid), LVDE);
         //main process
-        if(wait)
-            if(waitpid(pid, &status, 0) == -1)
+        if(p)
+        {
+            close(pipefd[1]);
+            logger lg("AdvExec");
+            char buf[1024];
+            stringstream ss;
+            string s;
+            while(int c = read(pipefd[0], buf, sizeof(buf)) > 0)
             {
-                mainlg.log("Advfork: Failed to wait child process", LVER);
-                mainlg.log(strerror(errno));
+                if(c < 256) buf[c] = '\0';
+                ss << buf;
+                while(getline(ss, s))
+                    lg.log(buf, LVDE);
             }
+        }
+        if(waitpid(pid, &status, 0) == -1)
+        {
+            mainlg.log("Advfork: Failed to wait child process", LVER);
+            mainlg.log(strerror(errno));
+        }
     }
     else
     {
@@ -133,7 +167,7 @@ int advFork(char** argp, pid_t& pid, bool wait)
         mainlg.log(strerror(errno));
         status = -1;
     }
-    
+
     return status;
 }
 
@@ -161,7 +195,7 @@ exec_opt::exec_opt(exec_opt && old)
     stack = old.stack;
     metafile = old.metafile;
     std_in = old.std_in;
-    
+
     old.id = -1;
     old.registedID = false;
 }
@@ -179,7 +213,7 @@ exec_opt & exec_opt::operator=(exec_opt && old)
         stack = old.stack;
         metafile = old.metafile;
         std_in = old.std_in;
-        
+
         old.id = -1;
         old.registedID = false;
     }
@@ -189,7 +223,10 @@ exec_opt & exec_opt::operator=(exec_opt && old)
 exec_opt::~exec_opt()
 {
     if(registedID)
+    {
+        mainlg.log("ReleaseBoxID: " + to_string(id), LVD2);
         boxslist.reset(id);
+    }
 }
 
 int exec_opt::getId()
@@ -204,15 +241,15 @@ int exec_opt::registbox()
         if(!boxslist.test(i))
         {
             boxslist.set(i);
-            mainlg.log("RegistID: " + to_string(i), LVDE);
+            mainlg.log("RegisterBoxID: " + to_string(i), LVD2);
             return i;
         }
     }
     return -1;
 }
 
-meta::meta() 
-{ 
+meta::meta()
+{
     cg_mem = 0;
     csw_forced = 0;
     csw_voluntary = 0;

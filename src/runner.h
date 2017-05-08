@@ -2,6 +2,7 @@
 #define RUNNER_H
 #include <bitset>
 #include <errno.h>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -12,6 +13,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/signal.h>
+#include <sys/stat.h>
 #include "global.h"
 #include "logger.h"
 #include "utils.h"
@@ -50,5 +52,5 @@ int boxInit(exec_opt& option);
 int boxExec(std::string cmd, exec_opt& option, bool enableStdin = true);
 int boxDel(exec_opt& option);
 
-int advFork(char** argp, pid_t& pid, bool wait = true);
+int advFork(char** argp, pid_t& pid);
 #endif // RUNNER_H

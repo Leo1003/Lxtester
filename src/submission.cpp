@@ -14,7 +14,7 @@ submission::submission(int id, string lang, string exe, string src)
     this->exename = exe;
     this->srcname = src;
     this->lang = getLang(lang);
-    
+
     opt.fsize = 65536;
     opt.time = 30;
     opt.mem = 131072;
@@ -26,7 +26,7 @@ submission::submission(int id, string lang, string exe, string src)
 
 language submission::getLang(string lang)
 {
-    mainlg.log(lang, LVD2);
+    mainlg.log("Language: " + lang, LVD2);
     language l = langs.at(lang);
     try
     {
@@ -119,10 +119,10 @@ int submission::compile()
     code << this->code;
     code.flush();
     code.close();
-    
+
     if (!lang.needComplie)
         return 0;
-    
+
     exec_opt compile_opt(opt.getId());
     compile_opt.mem = 262144;
     compile_opt.fsize = opt.fsize;
@@ -130,7 +130,7 @@ int submission::compile()
     compile_opt.processes = 10;
     compile_opt.stack = 0;
     compile_opt.time = opt.time;
-    
+
     int status = boxExec(lang.complier + " " + lang.compargs, compile_opt, false);
     return status;
 }
@@ -158,8 +158,8 @@ int submission::execute()
  * struct result
  * -------------------------*/
 
-result::result() 
-{ 
+result::result()
+{
     time = -1;
     mem = -1;
     exitcode = 0;
