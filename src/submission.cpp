@@ -17,9 +17,9 @@ submission::submission(int id, string lang, string exe, string src)
 
     opt.fsize = 65536;
     opt.time = 30;
-    opt.mem = 131072;
-    opt.processes = 1;
-    opt.stack = 256;
+    opt.mem = 1024 * 128;
+    opt.processes = 5;
+    opt.stack = 1024;
     opt.metafile = "./meta/task" + to_string(opt.getId());
     opt.std_in = "stdin.txt";
 }

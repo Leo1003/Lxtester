@@ -41,7 +41,8 @@ int boxExec(string cmd, exec_opt& option, bool enableStdin)
     args.PB("--stdout=stdout.log");
     args.PB("--stderr=stderr.log");
     args.PB("--meta=" + option.metafile);
-    args.PB("--full-env");
+    args.PB("--env=PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin");
+    args.PB("--env=HOME=/box");
     args.PB("--");
 
     //split cmd string into vector<string>
