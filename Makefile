@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11
 LIB = ./lib
 LIBS = -L $(LIB) -lboost_date_time -lboost_random -lboost_system -lsioclient -lsioclient_tls -lpthread
 SRC = ./src
-OBJ = ./build/global.o ./build/main.o ./build/config.o ./build/runner.o ./build/submission.o ./build/testsuite.o ./build/utils.o ./build/server_socket.o ./build/logger.o
+OBJ = ./build/global.o ./build/daemon.o ./build/main.o ./build/config.o ./build/runner.o ./build/submission.o ./build/testsuite.o ./build/utils.o ./build/server_socket.o ./build/logger.o
 ISODIR = ./isolate/
 
 build: mkdir ./bin/lxtester ./bin/isolate
@@ -13,13 +13,14 @@ build: mkdir ./bin/lxtester ./bin/isolate
 	$(CXX) $(CXXFLAGS) -o ./bin/lxtester $(OBJ) $(LIBS)
 
 .PHONY: ./bin/isolate
-./bin/isolate: 
+./bin/isolate:
 	$(MAKE) -C $(ISODIR)
 	cp ./isolate/default.cf ./isolate.conf
 
 ./build/global.o:
-./build/main.o: 
-./build/config.o: 
+./build/daemon.o:
+./build/main.o:
+./build/config.o:
 ./build/runner.o:
 ./build/submission.o:
 ./build/testsuite.o:
