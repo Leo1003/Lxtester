@@ -143,16 +143,13 @@ int advFork(char** argp, pid_t& pid)
         if(p)
         {
             close(pipefd[1]);
-            logger lg("AdvExec");
+            logger lg("Exec");
             char buf[1024];
-            stringstream ss;
-            string s;
-            while(int c = read(pipefd[0], buf, sizeof(buf)) > 0)
+            size_t c;
+            while(c = read(pipefd[0], buf, sizeof(buf)), c > 0)
             {
-                if(c < 256) buf[c] = '\0';
-                ss << buf;
-                while(getline(ss, s))
-                    lg.log(buf, LVDE);
+                if(c < 1024) buf[c] = '\0';
+                lg.log(buf, LVDE);
             }
         }
         if(waitpid(pid, &status, 0) == -1)

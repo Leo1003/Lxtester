@@ -6,7 +6,7 @@ using std::string;
 
 extern bool daerunning;
 extern int daepid;
-extern bool stopping;
+extern bool stopping, stopping2, reset;
 
 /*--------------------
  * config variables

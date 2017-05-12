@@ -69,7 +69,7 @@ int maind()
         signal(SIGTSTP, SIG_IGN);
         signal(SIGTTOU, SIG_IGN);
         signal(SIGTTIN, SIG_IGN);
-        signal(SIGHUP, SIG_IGN);
+        signal(SIGHUP, signal_handler);
     }
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
@@ -111,13 +111,31 @@ int maind()
         if (pidmap.size() < 10 && s->getSubmission(sub))
         {
             mainlg.log("Received submission, ID : " + to_string(sub.getId()), LVIN);
-            testWorkFlow(sub);
-            mainlg.log("Sent to workflow!", LVD2);
+            if (testWorkFlow(sub) != -1)
+                mainlg.log("Sent to workflow!", LVD2);
+            else
+            {
+                result res;
+                sub.setResult(res);
+                s->sendResult(sub);
+            }
         }
         else
             sleep(1);
     }
+    int left = 0;
+    while (pidmap.size() && !stopping2) {
+        if (left != pidmap.size()) {
+            left = pidmap.size();
+            mainlg.log("Waiting for Workers to exit: (" + to_string(left) + "/10)", LVIN);
+        }
+        child_handler();
+        sleep(1);
+    }
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGTERM, SIG_IGN);
     s->disconnect();
+    kill(0, SIGTERM);
     mainlg.log("Daemon stopped.", LVIN);
     exit(0);
 }
@@ -127,39 +145,36 @@ void reconnect()
     mainlg.log("Failed to connect to server.", LVER);
     mainlg.log("Retry in 30 seconds...", LVIN);
     int time = 30;
-    while (time--)
+    while (time-- && !reset)
     {
         if (stopping)
-        {
             return;
-        }
         sleep(1);
     }
     mainlg.log("Reconnecting...", LVIN);
     s->connect();
+    reset = false;
 }
 
 void signal_handler(int sig)
 {
     switch (sig)
     {
+        case SIGHUP:
+            reset = true;
         case SIGINT:
-            if (!DaemonMode)
-            {
-                mainlg.log("Received signal 2", LVIN);
-                mainlg.log("Stopping lxtester server...", LVIN);
-                stopping = 1;
-            }
-            break;
+            if (DaemonMode)
+                break;
+            mainlg.log("Received signal 2", LVIN);
         case SIGTERM:
             mainlg.log("Stopping lxtester server...", LVIN);
-            stopping = 1;
+            if (!stopping) stopping = true;
+            else stopping2 = true;
             break;
         case SIGCHLD:
             sigchild = true;
             break;
     }
-    return;
 }
 
 void child_handler()
@@ -277,6 +292,7 @@ pid_t testWorkFlow(submission& sub)
     {
         mainlg.log("Unable to fork.", LVFA);
         mainlg.log(strerror(errno));
+        return -1;
     }
     return pid;
 }

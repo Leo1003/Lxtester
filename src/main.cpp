@@ -23,7 +23,7 @@ const struct option longopts[] = {
     {"no-daemon",   no_argument,        NULL,   'D'},
     {"loglevel",    required_argument,  NULL,   'l'},
     {"help",        no_argument,        NULL,   'h'},
-    {"reload",      no_argument,        NULL,   'r'},
+    {"refresh",      no_argument,        NULL,   'r'},
     {"restart",     no_argument,        NULL,   'R'},
     {"stop",        no_argument,        NULL,   's'},
     {NULL,          0,                  NULL,   0}
@@ -161,7 +161,7 @@ int main(int argc,char* argv[])
                 lg.log("There is no process running.", LVER);
                 exit(1);
             }
-            kill(daepid, 9);
+            kill(-daepid, 9);
             lg.log("Killed.", LVIN);
             break;
     }
@@ -175,6 +175,7 @@ void usage(bool wa)
     printf("\t--daemon, -d \t\tRun and daemonize the program.\n");
     printf("\t--no-daemon, -D \tRun but not daemonize the program.\n");
     printf("\t--stop, -s \t\tStop the background daemon.\n");
+    printf("\t--refresh, -r \t\tTry to reconnect to server instantly.\n");
     printf("\t--restart, -R \t\tRestart the background daemon.\n");
     printf("\t--kill, -K \t\tKill the background daemon directly without waiting it to shutdown.\n");
     printf("\t--loglevel, -l \t\tSet the log output's level.\n");
