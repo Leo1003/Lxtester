@@ -14,8 +14,10 @@ void loadLangs(std::string confpath)
             config_section lconf = conf[name];
             l.name = lconf.getName();
             l.needComplie = lconf.getBool("needComplie");
-            l.complier = lconf.getString("Compiler");
-            l.compargs = lconf.getString("CompileArgs");
+            if(l.needComplie) {
+                l.complier = lconf.getString("Compiler");
+                l.compargs = lconf.getString("CompileArgs");
+            }
             l.executer = lconf.getString("Executer");
             l.execargs = lconf.getString("ExecuteArgs");
             langs[name] = l;
