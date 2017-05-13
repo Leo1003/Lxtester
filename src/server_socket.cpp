@@ -39,7 +39,8 @@ void ServerSocket::connect()
     stat = Connected;
     s = cli.socket("lxtester");
     s->on_error(bind(&ServerSocket::on_error, this, placeholders::_1));
-    s->on("Job", bind(&ServerSocket::_job, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4));
+    s->on("Job", bind(&ServerSocket::_job, this, placeholders::_1));
+    s->on("Cancel", bind(&ServerSocket::_cancel, this, placeholders::_1));
 }
 
 void ServerSocket::_connect()
@@ -75,16 +76,18 @@ ConnectionStatus ServerSocket::getStatus() const
         return stat;
 }
 
-bool ServerSocket::getSubmission(submission& sub)
+Job ServerSocket::getJob()
 {
     ULOCK
+    Job j;
     if(jobque.empty())
     {
-        return false;
+        j.type = None;
+        return j;
     }
-    sub = move(jobque.front());
+    j = move(jobque.front());
     jobque.pop();
-    return true;
+    return j;
 }
 
 void ServerSocket::sendResult(const submission& sub)
@@ -161,12 +164,12 @@ void ServerSocket::on_closed(client::close_reason const& reason)
     _cv.notify_all();
 }
 
-void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_ack, message::list& ack_message)
+void ServerSocket::_job(sio::event& event)
 {
     ULOCK
     try
     {
-        map<string, message::ptr> msg = mess->get_map();
+        map<string, message::ptr> msg = event.get_message()->get_map();
         int id = msg.at("id")->get_int();
         string l = msg.at("language")->get_string();
         string exefile = msg.at("exefile")->get_string();
@@ -175,7 +178,11 @@ void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_
 
         sub.setCode(msg.at("code")->get_string());
         sub.setStdin(msg.at("stdin")->get_string());
-        jobque.push(move(sub));
+        Job j;
+        j.type = Submission;
+        j.submissionid = sub.getId();
+        j.sub = move(sub);
+        jobque.push(move(j));
     }
     catch(out_of_range ex)
     {
@@ -189,3 +196,24 @@ void ServerSocket::_job(const string& name, const message::ptr& mess, bool need_
     }
 }
 
+void ServerSocket::_cancel(sio::event& event)
+{
+    ULOCK
+    try
+    {
+        map<string, message::ptr> msg = event.get_message()->get_map();
+        Job j;
+        j.type = Cancel;
+        j.submissionid = msg.at("id")->get_int();
+    }
+    catch(out_of_range ex)
+    {
+        lg.log("Server sent a bad request format!", LVWA);
+        lg.log(ex.what());
+    }
+    catch(exception ex)
+    {
+        lg.log("Failed to receive job", LVFA);
+        lg.log(ex.what());
+    }
+}

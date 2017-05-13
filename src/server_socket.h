@@ -25,6 +25,20 @@ enum ConnectionStatus
     Disconnected
 };
 
+enum JobType
+{
+    None,
+    Submission,
+    Cancel
+};
+
+struct Job
+{
+    JobType type;
+    submission sub;
+    int submissionid;
+};
+
 class ServerSocket
 {
 public:
@@ -33,7 +47,7 @@ public:
     ConnectionStatus getStatus() const;
     void connect();
     void disconnect();
-    bool getSubmission(submission& sub);
+    Job getJob();
     void sendResult(const submission& sub);
 private:
     sio::client cli;
@@ -43,7 +57,7 @@ private:
     bool unlocked;
     std::string addr;
     std::string token;
-    std::queue<submission> jobque;
+    std::queue<Job> jobque;
     logger lg;
     ConnectionStatus stat;
     
@@ -55,8 +69,8 @@ private:
     void on_error(sio::message::ptr const& message);
     void on_closed(sio::client::close_reason const& reason);
     //Events
-    void _job(const std::string& name, sio::message::ptr const& mess, bool need_ack, sio::message::list& ack_message);
-    void _callback(const std::string& name, sio::message::ptr const& mess, bool need_ack, sio::message::list& ack_message);
+    void _job(sio::event& event);
+    void _cancel(sio::event& event);
 };
 
 #endif // SERVER_SOCKET_H

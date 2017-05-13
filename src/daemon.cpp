@@ -105,19 +105,39 @@ int maind()
                 mainlg.log("Receive error from server.", LVFA);
                 exit(1);
             case Connected:
+                reset = false;
                 break;
         }
-        submission sub;
-        if (pidmap.size() < 10 && s->getSubmission(sub))
+        Job j;
+        if (j = s->getJob(), pidmap.size() < 10 && j.type != None)
         {
-            mainlg.log("Received submission, ID : " + to_string(sub.getId()), LVIN);
-            if (testWorkFlow(sub) != -1)
-                mainlg.log("Sent to workflow!", LVD2);
-            else
+            if (j.type == Submission)
             {
-                result res;
-                sub.setResult(res);
-                s->sendResult(sub);
+                mainlg.log("Received submission, ID : " + to_string(j.submissionid), LVIN);
+                if (testWorkFlow(j.sub) != -1)
+                    mainlg.log("Sent to workflow!", LVD2);
+                else
+                {
+                    result res;
+                    j.sub.setResult(res);
+                    s->sendResult(j.sub);
+                }
+            } 
+            else if (j.type == Cancel) 
+            {
+                mainlg.log("Received cancel request, ID : " + to_string(j.submissionid), LVIN);
+                bool killed = false;
+                for (auto const &ele : pidmap) 
+                {
+                    if (ele.second.getId() == j.submissionid)
+                    {
+                        if (!kill(SIGTERM, ele.first))
+                            killed = true;
+                        break;
+                    }
+                }
+                if (!killed)
+                    mainlg.log("Cancel not found, ID : " + to_string(j.submissionid), LVIN);
             }
         }
         else

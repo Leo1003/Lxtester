@@ -1,3 +1,2 @@
-Add cancel function
 notify server when the queue is full
 use setproctitle to show special title in htop
