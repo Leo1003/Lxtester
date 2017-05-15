@@ -114,6 +114,7 @@ int maind()
             if (j.type == Submission)
             {
                 mainlg.log("Received submission, ID : " + to_string(j.submissionid), LVIN);
+                j.sub.initBoxid();
                 if (testWorkFlow(j.sub) != -1)
                     mainlg.log("Sent to workflow!", LVD2);
                 else
@@ -122,12 +123,12 @@ int maind()
                     j.sub.setResult(res);
                     s->sendResult(j.sub);
                 }
-            } 
-            else if (j.type == Cancel) 
+            }
+            else if (j.type == Cancel)
             {
                 mainlg.log("Received cancel request, ID : " + to_string(j.submissionid), LVIN);
                 bool killed = false;
-                for (auto const &ele : pidmap) 
+                for (auto const &ele : pidmap)
                 {
                     if (ele.second.getId() == j.submissionid)
                     {
@@ -206,7 +207,7 @@ void child_handler()
         mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVDE);
         try
         {
-            submission sub = move(pidmap.at(chldpid));
+            submission sub = pidmap.at(chldpid);
             logger lg("Worker" + to_string(sub.getOption().getId()));
             if (WIFEXITED(chldsta))
             {
@@ -241,22 +242,12 @@ void child_handler()
                 lg.log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
             }
             //remove sandbox
-            if (boxDel(sub.getOption()))
-            {
-                lg.log("Unable to remove box.", LVER);
-                lg.log("Box id: " + to_string(sub.getOption().getId()));
-            }
-            lg.log("Box id: " + to_string(sub.getOption().getId()) + " removed.", LVDE);
+            sub.clean();
             //sendResult
-            lg.log("Sending result.", LVDE);
+            lg.log("Sending result.", LVD2);
             s->sendResult(sub);
             lg.log("Successfully sent result, ID: " + to_string(sub.getId()), LVIN);
             pidmap.erase(pidmap.find(chldpid));
-            if (unlink(sub.getOption().metafile.c_str()))
-            {
-                mainlg.log("Unable to delete meta file.", LVWA);
-                mainlg.log(strerror(errno));
-            }
         }
         catch (out_of_range ex)
         {
@@ -271,7 +262,7 @@ pid_t testWorkFlow(submission& sub)
 {
     pid_t pid = fork();
     if (pid > 0)
-        pidmap[pid] = move(sub);
+        pidmap[pid] = sub;
     else if (pid == 0)
     {
         //set child environment
@@ -280,17 +271,16 @@ pid_t testWorkFlow(submission& sub)
         signal(SIGHUP, SIG_DFL);
         signal(SIGINT, SIG_DFL);
         signal(SIGTERM, SIG_DFL);
-        //create sandbox
-        if (boxInit(sub.getOption()))
-        {
-            mainlg.log("Unable to create box.", LVER);
-            mainlg.log("Box id: " + to_string(sub.getOption().getId()));
-            exit(2);
-        }
-        mainlg.log("Box id: " + to_string(sub.getOption().getId()) + " created.", LVDE);
 
         try
         {
+            //create sandbox
+
+            if (sub.setup())
+            {
+                mainlg.log("Setup Failed, ID: " + to_string(sub.getId()), LVWA);
+                exit(2);
+            }
             if (sub.compile())
             {
                 mainlg.log("Compile Failed, ID: " + to_string(sub.getId()), LVWA);

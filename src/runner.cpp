@@ -1,8 +1,9 @@
 #include "runner.h"
 #define PB push_back
+#define BUF_SIZE 1024
 using namespace std;
 
-int boxInit(exec_opt& option)
+int boxInit(const exec_opt& option)
 {
     vector<string> args;
     args.PB(IsoBinFile);
@@ -23,7 +24,7 @@ int boxInit(exec_opt& option)
         return 255;
 }
 
-int boxExec(string cmd, exec_opt& option, bool enableStdin)
+int boxExec(string cmd, const exec_opt& option, bool enableStdin)
 {
     vector<string> args;
     args.PB(IsoBinFile);
@@ -69,7 +70,7 @@ int boxExec(string cmd, exec_opt& option, bool enableStdin)
         return 255;
 }
 
-int boxDel(exec_opt& option)
+int boxDel(const exec_opt& option)
 {
     vector<string> args;
     args.PB(IsoBinFile);
@@ -144,13 +145,15 @@ int advFork(char** argp, pid_t& pid)
         {
             close(pipefd[1]);
             logger lg("Exec");
-            char buf[1024];
+            char buf[BUF_SIZE];
             size_t c;
+            string s;
             while(c = read(pipefd[0], buf, sizeof(buf)), c > 0)
             {
-                if(c < 1024) buf[c] = '\0';
-                lg.log(buf, LVDE);
+                if(c < BUF_SIZE) buf[c] = '\0';
+                s += buf;
             }
+            lg.log(s, LVDE);
         }
         if(waitpid(pid, &status, 0) == -1)
         {
@@ -172,78 +175,47 @@ int advFork(char** argp, pid_t& pid)
 bitset<100> exec_opt::boxslist;
 exec_opt::exec_opt()
 {
-    id = registbox();
-    registedID = true;
+    id = -1;
+    hasID = false;
 }
 
 exec_opt::exec_opt(int id)
 {
     this->id = id;
-    registedID = false;
+    hasID = true;
 }
 
-exec_opt::exec_opt(exec_opt && old)
-{
-    this->id = old.id;
-    this->registedID = old.registedID;
-    fsize = old.fsize;
-    time = old.time;
-    mem = old.mem;
-    processes = old.processes;
-    stack = old.stack;
-    metafile = old.metafile;
-    std_in = old.std_in;
-
-    old.id = -1;
-    old.registedID = false;
-}
-
-exec_opt & exec_opt::operator=(exec_opt && old)
-{
-    if (this != &old)
-    {
-        this->id = old.id;
-        this->registedID = old.registedID;
-        fsize = old.fsize;
-        time = old.time;
-        mem = old.mem;
-        processes = old.processes;
-        stack = old.stack;
-        metafile = old.metafile;
-        std_in = old.std_in;
-
-        old.id = -1;
-        old.registedID = false;
-    }
-    return *this;
-}
-
-exec_opt::~exec_opt()
-{
-    if(registedID)
-    {
-        mainlg.log("ReleaseBoxID: " + to_string(id), LVD2);
-        boxslist.reset(id);
-    }
-}
-
-int exec_opt::getId()
+int exec_opt::getId() const
 {
     return id;
 }
 
-int exec_opt::registbox()
+int exec_opt::registerbox()
 {
-    for(int i = 0; i < 100; i++)
-    {
-        if(!boxslist.test(i))
+    if (!hasID)
+        for(int i = 0; i < 100; i++)
         {
-            boxslist.set(i);
-            mainlg.log("RegisterBoxID: " + to_string(i), LVD2);
-            return i;
+            if(!boxslist.test(i))
+            {
+                boxslist.set(i);
+                this->id = i;
+                hasID = true;
+                mainlg.log("RegisterBoxID: " + to_string(i), LVD2);
+                break;
+            }
         }
+    return this->id;
+}
+
+void exec_opt::releasebox()
+{
+    if(hasID)
+    {
+        mainlg.log("ReleaseBoxID: " + to_string(id), LVD2);
+        boxslist.reset(id);
+        id = -1;
+        hasID = false;
     }
-    return -1;
 }
 
 meta::meta()

@@ -85,7 +85,7 @@ Job ServerSocket::getJob()
         j.type = None;
         return j;
     }
-    j = move(jobque.front());
+    j = jobque.front();
     jobque.pop();
     return j;
 }
@@ -174,15 +174,16 @@ void ServerSocket::_job(sio::event& event)
         string l = msg.at("language")->get_string();
         string exefile = msg.at("exefile")->get_string();
         string srcfile = msg.at("srcfile")->get_string();
+        
         submission sub(id, l, exefile, srcfile);
-
         sub.setCode(msg.at("code")->get_string());
         sub.setStdin(msg.at("stdin")->get_string());
+        
         Job j;
         j.type = Submission;
         j.submissionid = sub.getId();
-        j.sub = move(sub);
-        jobque.push(move(j));
+        j.sub = sub;
+        jobque.push(j);
     }
     catch(out_of_range ex)
     {
@@ -205,6 +206,7 @@ void ServerSocket::_cancel(sio::event& event)
         Job j;
         j.type = Cancel;
         j.submissionid = msg.at("id")->get_int();
+        jobque.push(j);
     }
     catch(out_of_range ex)
     {

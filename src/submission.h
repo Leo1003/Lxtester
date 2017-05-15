@@ -32,7 +32,6 @@ public:
     submission();
     submission(int id, std::string lang, std::string exe, std::string src);
     int getId() const;
-    pid_t getPID() const;
     exec_opt& getOption();
     result getResult() const;
     void setResult(result res);
@@ -40,12 +39,17 @@ public:
     void setCode(std::string code);
     std::string getStdin() const;
     void setStdin(std::string data);
-    pid_t compile();
-    pid_t execute();
+
+    /** Execute submission **/
+    int initBoxid();
+    int setup();
+    int compile();
+    int execute();
+    int clean();
 private:
     language getLang(std::string lang);
     std::string formatCMD(std::string fmstr);
-    pid_t pid;
+    void extract(std::string file, std::string data);
     int id;
     std::string code, exename, srcname, stdin;
     language lang;

@@ -7,7 +7,7 @@ using boost::format;
  * class submission
  * -------------------------*/
 
-submission::submission() : opt(-1) {}
+submission::submission() {}
 submission::submission(int id, string lang, string exe, string src)
 {
     this->id = id;
@@ -20,7 +20,7 @@ submission::submission(int id, string lang, string exe, string src)
     opt.mem = 1024 * 128;
     opt.processes = 5;
     opt.stack = 1024;
-    opt.metafile = "./meta/task" + to_string(opt.getId());
+    //opt.metafile = "./meta/task" + to_string(opt.getId());
     opt.std_in = "stdin.txt";
 }
 
@@ -85,11 +85,6 @@ int submission::getId() const
     return id;
 }
 
-pid_t submission::getPID() const
-{
-    return pid;
-}
-
 exec_opt& submission::getOption()
 {
     return opt;
@@ -105,21 +100,47 @@ void submission::setResult(result res)
     this->res = res;
 }
 
+void submission::extract(std::string file, std::string data)
+{
+    string path = BoxDir + "/" + to_string(opt.getId()) + "/box/" + file;
+    ofstream fs(path);
+    mainlg.log("Source file: " + path, LVD2);
+    if(!fs)
+    {
+        mainlg.log("Failed to opened file: " + path, LVER);
+        mainlg.log("Box id: " + to_string(opt.getId()));
+        throw ios_base::failure(strerror(errno));
+    }
+    fs << data;
+    fs.flush();
+    fs.close();
+}
+
+int submission::initBoxid()
+{
+    opt.registerbox();
+    opt.metafile = "./meta/task" + to_string(opt.getId());
+    return opt.getId();
+}
+
+int submission::setup()
+{
+    if (initBoxid() == -1)
+        return 1;
+    if (boxInit(opt))
+    {
+        mainlg.log("Unable to create box.", LVER);
+        mainlg.log("Box id: " + to_string(opt.getId()));
+        return 2;
+    }
+    mainlg.log("Box id: " + to_string(opt.getId()) + " created.", LVDE);
+    extract(srcname, this->code);
+    extract(opt.std_in, this->stdin);
+    return 0;
+}
+
 int submission::compile()
 {
-    string path = BoxDir + "/" + to_string(opt.getId()) + "/box/" + srcname;
-    ofstream code(path);
-    mainlg.log("Source file: " + path, LVD2);
-    if(!code)
-    {
-        mainlg.log("Failed to opened code file.", LVER);
-        mainlg.log("Box id: " + to_string(opt.getId()));
-        throw ifstream::failure(strerror(errno));
-    }
-    code << this->code;
-    code.flush();
-    code.close();
-
     if (!lang.needComplie)
         return 0;
 
@@ -131,27 +152,29 @@ int submission::compile()
     compile_opt.stack = 0;
     compile_opt.time = opt.time;
 
-    int status = boxExec(lang.complier + " " + lang.compargs, compile_opt, false);
-    return status;
+    return boxExec(lang.complier + " " + lang.compargs, compile_opt, false);
 }
 
 int submission::execute()
 {
-    string path = BoxDir + "/" + to_string(opt.getId()) + "/box/" + opt.std_in;
-    ofstream infile(path);
-    mainlg.log("Stdin file: " + path, LVD2);
-    if(!infile)
-    {
-        mainlg.log("Failed to opened stdin file.", LVER);
-        mainlg.log("Box id: " + to_string(opt.getId()));
-        throw ifstream::failure(strerror(errno));
-    }
-    infile << this->opt.std_in;
-    infile.flush();
-    infile.close();
+    return boxExec(lang.executer + " " + lang.execargs, opt);
+}
 
-    int status = boxExec(lang.executer + " " + lang.execargs, opt);
-    return status;
+int submission::clean()
+{
+    if (boxDel(opt))
+    {
+        mainlg.log("Unable to remove box.", LVER);
+        mainlg.log("Box id: " + to_string(opt.getId()));
+    }
+    mainlg.log("Box id: " + to_string(opt.getId()) + " removed.", LVDE);
+    opt.releasebox();
+    if (unlink(opt.metafile.c_str()))
+    {
+        mainlg.log("Unable to delete meta file.", LVWA);
+        mainlg.log(strerror(errno));
+    }
+    return 0;
 }
 
 /*--------------------------
