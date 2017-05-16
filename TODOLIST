@@ -1,3 +1,4 @@
+send error message to server
 add suspend function
 add reload function
 use setproctitle to show special title in htop
