@@ -123,15 +123,16 @@ int advFork(char** argp, pid_t& pid)
     if(pid == 0)
     {
         //child process
-        close(0);
+        for (int i = getdtablesize(); i >= 0; --i)
+            if (i != pipefd[1])
+                close(i);
         open("/dev/null", O_RDONLY);
         if(p)
         {
             close(pipefd[0]);
-            close(1);
-            close(2);
             dup2(pipefd[1], 1);
             dup2(pipefd[1], 2);
+            close(pipefd[1]);
         }
         execvp(argp[0], argp);
         mainlg.log("Failed to exec.", LVFA);
@@ -154,6 +155,7 @@ int advFork(char** argp, pid_t& pid)
                 s += buf;
             }
             lg.log(s, LVDE);
+            close(pipefd[0]);
         }
         if(waitpid(pid, &status, 0) == -1)
         {
