@@ -119,7 +119,8 @@ int main(int argc,char* argv[])
             }
             if (DaemonMode)
                 daemon(1, 0);
-            return maind();
+            enterDaemon();
+            break;
         case DAE_STOP:
             if (!daerunning)
             {
@@ -153,8 +154,10 @@ int main(int argc,char* argv[])
             {
                 sleep(1);
             }
-            daemon(1, 0);
-            return maind();
+            if (DaemonMode)
+                daemon(1, 0);
+            enterDaemon();
+            break;
         case DAE_KILL:
             if (!daerunning)
             {

@@ -13,7 +13,8 @@
 #include "submission.h"
 #include "utils.h"
 
-int maind();
+void enterDaemon();
+void maind();
 void reconnect();
 void signal_handler(int);
 void child_handler();

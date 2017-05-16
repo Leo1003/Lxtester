@@ -6,7 +6,7 @@ ServerSocket *s;
 bool sigchild = false;
 logger mainlg("MainProc");
 
-int maind()
+void enterDaemon()
 {
     umask(0022);
     if (chdir(WorkingDir.c_str()) == -1)
@@ -28,6 +28,7 @@ int maind()
             exit(1);
         }
     }
+    mainlg.log("Daemon PID: " + to_string(getpid()), LVIN);
     mainlg.log("Chdir to: " + string(getcwd(NULL, 0)), LVDE);
     int lfp = open(LOCKFile.c_str(), O_RDWR|O_CREAT|O_TRUNC, 0640);
 	if (lfp == -1)
@@ -86,7 +87,11 @@ int maind()
         mainlg.log("Abort!", LVFA);
         exit(1);
     }
-    mainlg.log("Daemon PID: " + to_string(getpid()), LVIN);
+    maind();
+}
+
+void maind()
+{
     mainlg.log("Daemon Started", LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
     s->connect();
@@ -132,7 +137,7 @@ int maind()
                 {
                     if (ele.second.getId() == j.submissionid)
                     {
-                        if (!kill(SIGTERM, ele.first))
+                        if (!kill(ele.first, SIGTERM))
                             killed = true;
                         break;
                     }
