@@ -207,28 +207,21 @@ void ConfigLoader()
         lg.log(ex.what());
         exit(1);
     }
-    if (!argdm && mainconf.isExist("DaemonMode"))
-        DaemonMode = mainconf.getBool("DaemonMode");
-    if (mainconf.isExist("PIDFile"))
-        PIDFile = mainconf.getString("PIDFile");
-    if (mainconf.isExist("LockFile"))
-        LOCKFile = mainconf.getString("LockFile");
-    if (mainconf.isExist("SandboxDirectory"))
-        BoxDir = mainconf.getString("SandboxDirectory");
-    if (mainconf.isExist("WorkingDirectory") && isDir(mainconf.getString("WorkingDirectory")))
-        WorkingDir = mainconf.getString("WorkingDirectory");
-    if (mainconf.isExist("LogFile"))
-        LogFile = mainconf.getString("LogFile");
-    if (mainconf.isExist("LanguageFile"))
-        LangFile = mainconf.getString("LanguageFile");
-    if (mainconf.isExist("IsolatePath"))
-        IsoBinFile = mainconf.getString("IsolatePath");
-    if (mainconf.isExist("ServerAddress"))
-        ServerAddr = mainconf.getString("ServerAddress");
+    if (!argdm)
+        mainconf.trygetBool(DaemonMode, "DaemonMode");
+    mainconf.trygetString(PIDFile, "PIDFile");
+    mainconf.trygetString(LOCKFile, "LockFile");
+    mainconf.trygetString(BoxDir, "SandboxDirectory");
+    mainconf.trygetString(WorkingDir, "WorkingDirectory");
+    if (!isDir(WorkingDir))
+        mainlg.log("WorkingDir may not be a directory!" ,LVWA);
+    mainconf.trygetString(LogFile, "LogFile");
+    mainconf.trygetString(LangFile, "LanguageFile");
+    mainconf.trygetString(IsoBinFile, "IsolatePath");
+    mainconf.trygetString(ServerAddr, "ServerAddress");
     if (mainconf.isExist("ServerPort"))
         ServerPort = mainconf.getInt("ServerPort");
-    if (mainconf.isExist("ServerToken"))
-        ServerToken = mainconf.getString("ServerToken");
+    mainconf.trygetString(ServerToken, "ServerToken");
     if (!arglv && mainconf.isExist("DebugLevel"))
         logger::setGlobalLevel((loglevel)mainconf.getInt("DebugLevel"));
 }

@@ -52,6 +52,36 @@ string config_section::getString(string key) const
     }
 }
 
+bool config_section::trygetBool(bool& buf, std::string key) const
+{
+    if (isExist(key))
+    {
+        buf = getBool(key);
+        return true;
+    }
+    return false;
+}
+
+bool config_section::trygetInt(int64_t& buf, std::string key) const
+{
+    if (isExist(key))
+    {
+        buf = getInt(key);
+        return true;
+    }
+    return false;
+}
+
+bool config_section::trygetString(std::string& buf, std::string key) const
+{
+    if (isExist(key))
+    {
+        buf = getString(key);
+        return true;
+    }
+    return false;
+}
+
 std::string config_section::getName() const
 {
     return name;
