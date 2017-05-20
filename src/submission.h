@@ -22,7 +22,7 @@ struct result
     int time, mem, exitcode, signal;
     bool isKilled;
     RESULT_TYPE type;
-    result();
+    result(std::string error);
     result(int boxid, meta metas);
 };
 

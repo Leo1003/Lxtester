@@ -20,8 +20,18 @@ void enterDaemon()
         for (int i = getdtablesize(); i >= 0; --i)
             close(i);
         if (open("/dev/null", O_RDONLY) == -1 || /* open stdin */
-            open(LogFile.c_str(), O_WRONLY|O_CREAT|O_APPEND, 0644) == -1 || /* stdout */
-            dup2(1, 2) == -1) /* stderr */
+            open("/dev/null", O_WRONLY) == -1 || /* stdout */
+            open(LogFile.c_str(), O_WRONLY|O_CREAT|O_APPEND, 0644) == -1) /* stderr */
+        {
+            mainlg.log("Failed to redirect I/O.", LVFA);
+            mainlg.log(strerror(errno));
+            exit(1);
+        }
+    } else {
+        if (close(0) == -1 ||
+            open("/dev/null", O_RDONLY) == -1 || /* open stdin */
+            close(1) == -1 ||
+            open("/dev/null", O_WRONLY) == -1) /* stdout */
         {
             mainlg.log("Failed to redirect I/O.", LVFA);
             mainlg.log(strerror(errno));
@@ -74,6 +84,7 @@ void enterDaemon()
     }
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
+    signal(SIGUSR1, signal_handler);
     signal(SIGCHLD, signal_handler);
 
     try
@@ -124,7 +135,7 @@ void maind()
                     mainlg.log("Sent to workflow!", LVD2);
                 else
                 {
-                    result res;
+                    result res("Workflow failed!");
                     j.sub.setResult(res);
                     s->sendResult(j.sub);
                 }
@@ -149,14 +160,26 @@ void maind()
         else
             sleep(1);
     }
+    if (s->getStatus() == Connected)
+        s->suspend();
     int left = 0;
-    while (pidmap.size() && !stopping2) {
+    while (!stopping2 && pidmap.size()) {
         if (left != pidmap.size()) {
             left = pidmap.size();
             mainlg.log("Waiting for Workers to exit: (" + to_string(left) + "/10)", LVIN);
         }
         child_handler();
         sleep(1);
+    }
+    if (s->getStatus() == Connected) {
+        while (!stopping2 && s->countJob()) {
+            Job j = s->getJob();
+            if (j.type == Submission) {
+                result res("Lxtester stopped");
+                j.sub.setResult(res);
+                s->sendResult(j.sub);
+            }
+        }
     }
     signal(SIGCHLD, SIG_IGN);
     signal(SIGTERM, SIG_IGN);
@@ -186,7 +209,7 @@ void signal_handler(int sig)
 {
     switch (sig)
     {
-        case SIGHUP:
+        case SIGUSR1:
             reset = true;
         case SIGINT:
             if (DaemonMode)
@@ -220,7 +243,7 @@ void child_handler()
                 {
                     RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
                     meta mf;
-                    result res;
+                    result res("Fatal error occurred when execute submission");
                     switch (resty)
                     {
                         case TYPE_COMPILATION:
@@ -235,16 +258,17 @@ void child_handler()
                 catch (ifstream::failure ex)
                 {
                     lg.log("Failed to load meta file: " + sub.getOption().metafile, LVER);
-                    result res;
+                    result res("Failed to load meta file");
                     sub.setResult(res);
                 }
             }
             else if (WIFSIGNALED(chldsta))
             {
-                result res;
+                string sigstr(strsignal(WTERMSIG(chldsta)));
+                result res("Workflow had been killed by: " + sigstr);
                 sub.setResult(res);
                 lg.log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
-                lg.log("Signal: " + string(strsignal(WTERMSIG(chldsta))));
+                lg.log("Signal: " + sigstr);
             }
             //remove sandbox
             sub.clean();

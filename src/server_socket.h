@@ -46,8 +46,11 @@ public:
     ~ServerSocket();
     ConnectionStatus getStatus() const;
     void connect();
+    void suspend();
+    void resume();
     void disconnect();
     Job getJob();
+    size_t countJob() const;
     void sendResult(const submission& sub);
 private:
     sio::client cli;
@@ -60,7 +63,7 @@ private:
     std::queue<Job> jobque;
     logger lg;
     ConnectionStatus stat;
-    
+
     inline void resetmt();
     void _connect();
     //Listeners

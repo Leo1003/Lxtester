@@ -34,6 +34,7 @@ enum Command
     DAE_START,
     DAE_STOP,
     DAE_RELOAD,
+    DAE_REFRESH,
     DAE_RESTART,
     DAE_KILL
 };
@@ -63,7 +64,7 @@ int main(int argc,char* argv[])
                 break;
             case 'r':
                 if (ty) usage(true);
-                ty = DAE_RELOAD;
+                ty = DAE_REFRESH;
                 break;
             case 'R':
                 if (ty) usage(true);
@@ -108,26 +109,33 @@ int main(int argc,char* argv[])
     ConfigLoader();
     DetectDaemon();
 
+    if ((ty == DAE_DEFAULT || ty == DAE_START))
+    {
+        if (daerunning)
+        {
+            lg.log("There is another process running.", LVER);
+            exit(1);
+        }
+    }
+    else
+    {
+        if (!daerunning)
+        {
+            lg.log("There is no process running.", LVER);
+            exit(1);
+        }
+    }
+
     switch (ty)
     {
         case DAE_START:
         case DAE_DEFAULT:
-            if (daerunning)
-            {
-                lg.log("There is another process running.", LVER);
-                exit(1);
-            }
             if (DaemonMode)
                 daemon(1, 0);
             enterDaemon();
             break;
         case DAE_STOP:
-            if (!daerunning)
-            {
-                lg.log("There is no process running.", LVER);
-                exit(1);
-            }
-            kill(daepid, 15);
+            kill(daepid, SIGTERM);
             lg.log("Stopping...", LVIN);
             while (DetectDaemon())
             {
@@ -136,20 +144,12 @@ int main(int argc,char* argv[])
             lg.log("Stopped.", LVIN);
             break;
         case DAE_RELOAD:
-            if (!daerunning)
-            {
-                lg.log("There is no process running.", LVER);
-                exit(1);
-            }
-            kill(daepid, 1);
+            kill(daepid, SIGHUP);
+        case DAE_REFRESH:
+            kill(daepid, SIGUSR1);
             break;
         case DAE_RESTART:
-            if (!daerunning)
-            {
-                lg.log("There is no process running.", LVER);
-                exit(1);
-            }
-            kill(daepid, 15);
+            kill(daepid, SIGTERM);
             while (DetectDaemon())
             {
                 sleep(1);
@@ -159,12 +159,7 @@ int main(int argc,char* argv[])
             enterDaemon();
             break;
         case DAE_KILL:
-            if (!daerunning)
-            {
-                lg.log("There is no process running.", LVER);
-                exit(1);
-            }
-            kill(-daepid, 9);
+            kill(-daepid, SIGKILL);
             lg.log("Killed.", LVIN);
             break;
     }

@@ -63,6 +63,18 @@ void ServerSocket::disconnect()
     _ul.unlock();
 }
 
+void ServerSocket::suspend()
+{
+    ULOCK
+    s->emit("Suspend");
+}
+
+void ServerSocket::resume()
+{
+    ULOCK
+    s->emit("Resume");
+}
+
 ConnectionStatus ServerSocket::getStatus() const
 {
     if(stat == Connected)
@@ -88,6 +100,11 @@ Job ServerSocket::getJob()
     j = jobque.front();
     jobque.pop();
     return j;
+}
+
+size_t ServerSocket::countJob() const
+{
+    return jobque.size();
 }
 
 void ServerSocket::sendResult(const submission& sub)
@@ -174,11 +191,11 @@ void ServerSocket::_job(sio::event& event)
         string l = msg.at("language")->get_string();
         string exefile = msg.at("exefile")->get_string();
         string srcfile = msg.at("srcfile")->get_string();
-        
+
         submission sub(id, l, exefile, srcfile);
         sub.setCode(msg.at("code")->get_string());
         sub.setStdin(msg.at("stdin")->get_string());
-        
+
         Job j;
         j.type = Submission;
         j.submissionid = sub.getId();

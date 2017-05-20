@@ -7,8 +7,8 @@ using boost::format;
  * class submission
  * -------------------------*/
 
-submission::submission() {}
-submission::submission(int id, string lang, string exe, string src)
+submission::submission(): res("Result not set") {}
+submission::submission(int id, string lang, string exe, string src): submission()
 {
     this->id = id;
     this->exename = exe;
@@ -20,7 +20,6 @@ submission::submission(int id, string lang, string exe, string src)
     opt.mem = 1024 * 128;
     opt.processes = 5;
     opt.stack = 1024;
-    //opt.metafile = "./meta/task" + to_string(opt.getId());
     opt.std_in = "stdin.txt";
 }
 
@@ -181,7 +180,7 @@ int submission::clean()
  * struct result
  * -------------------------*/
 
-result::result()
+result::result(string error)
 {
     time = -1;
     mem = -1;
@@ -189,7 +188,7 @@ result::result()
     signal = 0;
     isKilled = true;
     std_out = "";
-    std_err = "";
+    std_err = error;
     type = TYPE_FAILED;
 }
 
