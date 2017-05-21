@@ -1,6 +1,5 @@
 #ifndef RUNNER_H
 #define RUNNER_H
-#include <bitset>
 #include <errno.h>
 #include <fcntl.h>
 #include <fstream>
@@ -28,10 +27,11 @@ struct exec_opt
     std::string std_in, metafile;
     int registerbox();
     void releasebox();
+    void static setMax(int value);
 private:
     int id;
     bool hasID;
-    static bitset<100> boxslist;
+    static vector<bool> boxslist;
 };
 
 struct meta

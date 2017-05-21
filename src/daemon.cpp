@@ -91,6 +91,7 @@ void enterDaemon()
     {
         loadLangs(LangFile);
         loadSandboxOption(OptionFile);
+        exec_opt::setMax(MaxWorker);
     }
     catch (exception ex)
     {

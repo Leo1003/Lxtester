@@ -174,7 +174,7 @@ int advFork(char** argp, pid_t& pid)
     return status;
 }
 
-bitset<100> exec_opt::boxslist;
+vector<bool> exec_opt::boxslist;
 exec_opt::exec_opt()
 {
     id = -1;
@@ -206,14 +206,19 @@ void exec_opt::copySettings(exec_opt &dest) const
     dest.stack = this->stack;
 }
 
+void exec_opt::setMax(int value)
+{
+    boxslist.resize(value);
+}
+
 int exec_opt::registerbox()
 {
     if (!hasID)
         for(int i = 0; i < MaxWorker; i++)
         {
-            if(!boxslist.test(i))
+            if(!boxslist[i])
             {
-                boxslist.set(i);
+                boxslist[i] = true;
                 this->id = i;
                 hasID = true;
                 mainlg.log("RegisterBoxID: " + to_string(i), LVD2);
@@ -228,7 +233,7 @@ void exec_opt::releasebox()
     if(hasID)
     {
         mainlg.log("ReleaseBoxID: " + to_string(id), LVD2);
-        boxslist.reset(id);
+        boxslist[id] = false;
         id = -1;
         hasID = false;
     }
