@@ -43,20 +43,19 @@ int boxExec(string cmd, const exec_opt& option, bool enableStdin) {
     args.PB("--");
 
     //split cmd string into vector<string>
-    cmd = trim(cmd);
+    regex reg_args(R"-("([^"]+)"|([^ ]+))-");
+    string s = trim(cmd);
     mainlg.log("SandboxExec: CMD = \"" + cmd + "\"", LVD2);
-    stringstream ss(cmd);
-    string tmp;
-    while (!ss.eof()) {
-        ss >> tmp;
-        args.PB(tmp);
+    smatch sm;
+    while (regex_search(s, sm, reg_args)) {
+        mainlg.log("Matched: " + string(sm[0]), LVD2);
+        args.PB(sm[1] == "" ? sm[2] : sm[1]);
+        s = sm.suffix().str();
     }
 
     char** argp = parseVecstr(args);
-
     pid_t pid;
     int status = advFork(argp, pid);
-
     delCStrings(argp);
 
     if (WIFEXITED(status))
