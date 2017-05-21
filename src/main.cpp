@@ -207,6 +207,7 @@ void ConfigLoader()
     mainconf.trygetString(PIDFile, "PIDFile");
     mainconf.trygetString(LOCKFile, "LockFile");
     mainconf.trygetString(BoxDir, "SandboxDirectory");
+    mainconf.trygetInt(MaxWorker, "MaxWorker");
     mainconf.trygetString(WorkingDir, "WorkingDirectory");
     if (!isDir(WorkingDir))
         mainlg.log("WorkingDir may not be a directory!" ,LVWA);

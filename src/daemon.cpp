@@ -126,29 +126,23 @@ void maind()
                 break;
         }
         Job j;
-        if (j = s->getJob(), pidmap.size() < 10 && j.type != None)
-        {
-            if (j.type == Submission)
-            {
+        if (pidmap.size() < MaxWorker) {
+            j = s->getJob();
+            if (j.type == Submission) {
                 mainlg.log("Received submission, ID : " + to_string(j.submissionid), LVIN);
                 j.sub.initBoxid();
                 if (testWorkFlow(j.sub) != -1)
                     mainlg.log("Sent to workflow!", LVD2);
-                else
-                {
+                else {
                     result res("Workflow failed!");
                     j.sub.setResult(res);
                     s->sendResult(j.sub);
                 }
-            }
-            else if (j.type == Cancel)
-            {
+            } else if (j.type == Cancel) {
                 mainlg.log("Received cancel request, ID : " + to_string(j.submissionid), LVIN);
                 bool killed = false;
-                for (auto const &ele : pidmap)
-                {
-                    if (ele.second.getId() == j.submissionid)
-                    {
+                for (auto const &ele : pidmap) {
+                    if (ele.second.getId() == j.submissionid) {
                         if (!kill(ele.first, SIGTERM))
                             killed = true;
                         break;
@@ -156,9 +150,10 @@ void maind()
                 }
                 if (!killed)
                     mainlg.log("Cancel not found, ID : " + to_string(j.submissionid), LVIN);
+            } else {
+                sleep(1);
             }
-        }
-        else
+        } else
             sleep(1);
     }
     if (s->getStatus() == Connected)

@@ -16,6 +16,7 @@ extern bool DaemonMode;
 extern string PIDFile;
 extern string LOCKFile;
 extern string BoxDir;
+extern int MaxWorker;
 extern string WorkingDir;
 extern string LogFile;
 extern string LangFile;

@@ -10,6 +10,7 @@ bool DaemonMode = true;
 string PIDFile = "/tmp/lxtester.pid";
 string LOCKFile = "/tmp/lxtester.lock";
 string BoxDir = "/tmp/box";
+int MaxWorker = 10;
 string WorkingDir = ".";
 string LogFile = "/tmp/lxtester.log";
 string LangFile = "languages.conf";

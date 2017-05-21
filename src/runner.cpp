@@ -209,7 +209,7 @@ void exec_opt::copySettings(exec_opt &dest) const
 int exec_opt::registerbox()
 {
     if (!hasID)
-        for(int i = 0; i < 100; i++)
+        for(int i = 0; i < MaxWorker; i++)
         {
             if(!boxslist.test(i))
             {
