@@ -23,7 +23,7 @@ const struct option longopts[] = {
     {"no-daemon",   no_argument,        NULL,   'D'},
     {"loglevel",    required_argument,  NULL,   'l'},
     {"help",        no_argument,        NULL,   'h'},
-    {"refresh",      no_argument,        NULL,   'r'},
+    {"refresh",     no_argument,        NULL,   'r'},
     {"restart",     no_argument,        NULL,   'R'},
     {"stop",        no_argument,        NULL,   's'},
     {NULL,          0,                  NULL,   0}

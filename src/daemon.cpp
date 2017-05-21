@@ -208,6 +208,7 @@ void signal_handler(int sig)
     {
         case SIGUSR1:
             reset = true;
+            break;
         case SIGINT:
             if (DaemonMode)
                 break;
