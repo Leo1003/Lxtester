@@ -75,7 +75,7 @@ int tryParse(string str, int def)
     }
     catch(invalid_argument ex)
     {
-        mainlg.log("Parsing string error:", LVER);
+        mainlg.log("Parsing string error: " + str, LVER);
         mainlg.log(ex.what());
         return def;
     }
@@ -91,7 +91,7 @@ long long tryParsell(string str, long long def)
     }
     catch(invalid_argument ex)
     {
-        mainlg.log("Parsing string error:", LVER);
+        mainlg.log("Parsing string error: " + str, LVER);
         mainlg.log(ex.what());
         return def;
     }
@@ -107,7 +107,7 @@ double tryParsed(string str, double def)
     }
     catch(invalid_argument ex)
     {
-        mainlg.log("Parsing string error:", LVER);
+        mainlg.log("Parsing string error: " + str, LVER);
         mainlg.log(ex.what());
         return def;
     }

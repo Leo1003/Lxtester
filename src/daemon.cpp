@@ -90,10 +90,11 @@ void enterDaemon()
     try
     {
         loadLangs(LangFile);
+        loadSandboxOption(OptionFile);
     }
     catch (exception ex)
     {
-        mainlg.log("Failed to load languages config.", LVFA);
+        mainlg.log("Failed to load config.", LVFA);
         mainlg.log(ex.what());
         mainlg.log("Abort!", LVFA);
         exit(1);

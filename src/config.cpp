@@ -24,13 +24,13 @@ bool config_section::getBool(std::string key) const
     return false;
 }
 
-int64_t config_section::getInt(std::string key) const
+int config_section::getInt(std::string key) const
 {
     string str = getString(key);
-    int64_t v = 0;
+    int v = 0;
     try
     {
-        v = stoll(str);
+        v = stoi(str);
     }
     catch(invalid_argument ex)
     {
@@ -62,7 +62,7 @@ bool config_section::trygetBool(bool& buf, std::string key) const
     return false;
 }
 
-bool config_section::trygetInt(int64_t& buf, std::string key) const
+bool config_section::trygetInt(int& buf, std::string key) const
 {
     if (isExist(key))
     {

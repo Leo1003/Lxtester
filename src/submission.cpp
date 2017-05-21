@@ -14,12 +14,8 @@ submission::submission(int id, string lang, string exe, string src): submission(
     this->exename = exe;
     this->srcname = src;
     this->lang = getLang(lang);
-
-    opt.fsize = 65536;
-    opt.time = 30;
-    opt.mem = 1024 * 128;
-    opt.processes = 5;
-    opt.stack = 1024;
+    
+    execset.copySettings(opt);
     opt.std_in = "stdin.txt";
 }
 
@@ -143,13 +139,9 @@ int submission::compile()
     if (!lang.needComplie)
         return 0;
 
-    exec_opt compile_opt(opt.getId());
-    compile_opt.mem = 262144;
-    compile_opt.fsize = opt.fsize;
+    exec_opt compile_opt = opt;
+    compset.copySettings(compile_opt);
     compile_opt.metafile = opt.metafile;
-    compile_opt.processes = 10;
-    compile_opt.stack = 0;
-    compile_opt.time = opt.time;
 
     return boxExec(lang.complier + " " + lang.compargs, compile_opt, false);
 }

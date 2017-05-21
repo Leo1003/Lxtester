@@ -13,6 +13,7 @@ string BoxDir = "/tmp/box";
 string WorkingDir = ".";
 string LogFile = "/tmp/lxtester.log";
 string LangFile = "languages.conf";
+string OptionFile = "options.conf";
 string IsoBinFile = "./isolate/isolate";
 string ServerAddr = "localhost";
 short ServerPort = 80;

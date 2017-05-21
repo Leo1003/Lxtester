@@ -212,6 +212,7 @@ void ConfigLoader()
         mainlg.log("WorkingDir may not be a directory!" ,LVWA);
     mainconf.trygetString(LogFile, "LogFile");
     mainconf.trygetString(LangFile, "LanguageFile");
+    mainconf.trygetString(OptionFile, "OptionFile");
     mainconf.trygetString(IsoBinFile, "IsolatePath");
     mainconf.trygetString(ServerAddr, "ServerAddress");
     if (mainconf.isExist("ServerPort"))

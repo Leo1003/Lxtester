@@ -23,8 +23,8 @@ struct exec_opt
     exec_opt();
     exec_opt(int id);
     int getId() const;
-    long long time, mem;
-    int fsize, processes, stack;
+    void copySettings(exec_opt &dest) const;
+    int fsize, mem, processes, stack, time;
     std::string std_in, metafile;
     int registerbox();
     void releasebox();

@@ -179,9 +179,14 @@ exec_opt::exec_opt()
 {
     id = -1;
     hasID = false;
+    time = 1;
+    mem = 1024;
+    fsize = 1024;
+    processes = 1;
+    stack = 1024;
 }
 
-exec_opt::exec_opt(int id)
+exec_opt::exec_opt(int id) : exec_opt()
 {
     this->id = id;
     hasID = true;
@@ -190,6 +195,15 @@ exec_opt::exec_opt(int id)
 int exec_opt::getId() const
 {
     return id;
+}
+
+void exec_opt::copySettings(exec_opt &dest) const
+{
+    dest.time = this->time;
+    dest.mem = this->mem;
+    dest.fsize = this->fsize;
+    dest.processes = this->processes;
+    dest.stack = this->stack;
 }
 
 int exec_opt::registerbox()
