@@ -3,8 +3,7 @@
 #define BUF_SIZE 1024
 using namespace std;
 
-int boxInit(const exec_opt& option)
-{
+int boxInit(const exec_opt& option) {
     vector<string> args;
     args.PB(IsoBinFile);
     args.PB("--init");
@@ -12,20 +11,17 @@ int boxInit(const exec_opt& option)
     args.PB("--box-id=" + to_string(option.getId()));
 
     char** argp = parseVecstr(args);
-
     pid_t pid;
     int status = advFork(argp, pid);
-
     delCStrings(argp);
 
-    if(WIFEXITED(status))
+    if (WIFEXITED(status))
         return WEXITSTATUS(status);
     else
         return 255;
 }
 
-int boxExec(string cmd, const exec_opt& option, bool enableStdin)
-{
+int boxExec(string cmd, const exec_opt& option, bool enableStdin) {
     vector<string> args;
     args.PB(IsoBinFile);
     args.PB("--run");
@@ -37,7 +33,7 @@ int boxExec(string cmd, const exec_opt& option, bool enableStdin)
     args.PB("--processes=" + to_string(option.processes));
     args.PB("--stack=" + to_string(option.stack));
     args.PB("--fsize=" + to_string(option.fsize));
-    if(enableStdin)
+    if (enableStdin)
         args.PB("--stdin=" + option.std_in);
     args.PB("--stdout=stdout.log");
     args.PB("--stderr=stderr.log");
@@ -51,8 +47,7 @@ int boxExec(string cmd, const exec_opt& option, bool enableStdin)
     mainlg.log("SandboxExec: CMD = \"" + cmd + "\"", LVD2);
     stringstream ss(cmd);
     string tmp;
-    while(!ss.eof())
-    {
+    while (!ss.eof()) {
         ss >> tmp;
         args.PB(tmp);
     }
@@ -64,14 +59,13 @@ int boxExec(string cmd, const exec_opt& option, bool enableStdin)
 
     delCStrings(argp);
 
-    if(WIFEXITED(status))
+    if (WIFEXITED(status))
         return WEXITSTATUS(status);
     else
         return 255;
 }
 
-int boxDel(const exec_opt& option)
-{
+int boxDel(const exec_opt& option) {
     vector<string> args;
     args.PB(IsoBinFile);
     args.PB("--cleanup");
@@ -79,10 +73,8 @@ int boxDel(const exec_opt& option)
     args.PB("--box-id=" + to_string(option.getId()));
 
     char** argp = parseVecstr(args);
-
     pid_t pid;
     int status = advFork(argp, pid);
-
     delCStrings(argp);
 
     if(WIFEXITED(status))
@@ -91,18 +83,16 @@ int boxDel(const exec_opt& option)
         return 255;
 }
 
-int advFork(char** argp, pid_t& pid)
-{
-    if(logger::getGlobalLevel() <= LVDE)
-    {
+int advFork(char** argp, pid_t& pid) {
+    if (logger::getGlobalLevel() <= LVDE) {
         stringstream ss;
         mainlg.log("Advfork: Exec command:", LVDE);
         ss << "[";
         int i = 0;
-        while(argp[i] != NULL)
-        {
+        while (argp[i] != NULL) {
             ss << argp[i++];
-            if(argp[i] != NULL) ss << ", ";
+            if (argp[i] != NULL)
+                ss << ", ";
         }
         ss << "]" << endl;
         mainlg.log(ss.str());
@@ -111,24 +101,20 @@ int advFork(char** argp, pid_t& pid)
     int status = 0;
     bool p = false;
     int pipefd[2];
-    if(pipe(pipefd) == -1)
-    {
+    if (pipe(pipefd) == -1) {
         mainlg.log("Advfork: Failed to create pipe", LVER);
         mainlg.log(strerror(errno));
-    }
-    else
+    } else
         p = true;
 
     pid = fork();
-    if(pid == 0)
-    {
+    if (pid == 0) {
         //child process
         for (int i = getdtablesize(); i >= 0; --i)
             if (i != pipefd[1])
                 close(i);
         open("/dev/null", O_RDONLY);
-        if(p)
-        {
+        if (p) {
             close(pipefd[0]);
             dup2(pipefd[1], 1);
             dup2(pipefd[1], 2);
@@ -137,46 +123,37 @@ int advFork(char** argp, pid_t& pid)
         execvp(argp[0], argp);
         mainlg.log("Failed to exec.", LVFA);
         exit(127);
-    }
-    else if(pid > 0)
-    {
+    } else if (pid > 0) {
         mainlg.log("Child PID: " + to_string(pid), LVDE);
         //main process
-        if(p)
-        {
+        if (p) {
             close(pipefd[1]);
             logger lg("Exec");
             char buf[BUF_SIZE];
             size_t c;
             string s;
-            while(c = read(pipefd[0], buf, sizeof(buf)), c > 0)
-            {
+            while (c = read(pipefd[0], buf, sizeof(buf)), c > 0) {
                 if(c < BUF_SIZE) buf[c] = '\0';
                 s += buf;
             }
             lg.log(s, LVDE);
             close(pipefd[0]);
         }
-        if(waitpid(pid, &status, 0) == -1)
-        {
+        if (waitpid(pid, &status, 0) == -1) {
             mainlg.log("Advfork: Failed to wait child process", LVER);
             mainlg.log(strerror(errno));
         }
-    }
-    else
-    {
+    } else {
         //failed
         mainlg.log("Advfork Failed.", LVER);
         mainlg.log(strerror(errno));
         status = -1;
     }
-
     return status;
 }
 
 vector<bool> exec_opt::boxslist;
-exec_opt::exec_opt()
-{
+exec_opt::exec_opt() {
     id = -1;
     hasID = false;
     time = 1;
@@ -186,19 +163,16 @@ exec_opt::exec_opt()
     stack = 1024;
 }
 
-exec_opt::exec_opt(int id) : exec_opt()
-{
+exec_opt::exec_opt(int id): exec_opt() {
     this->id = id;
     hasID = true;
 }
 
-int exec_opt::getId() const
-{
+int exec_opt::getId() const {
     return id;
 }
 
-void exec_opt::copySettings(exec_opt &dest) const
-{
+void exec_opt::copySettings(exec_opt &dest) const {
     dest.time = this->time;
     dest.mem = this->mem;
     dest.fsize = this->fsize;
@@ -206,18 +180,14 @@ void exec_opt::copySettings(exec_opt &dest) const
     dest.stack = this->stack;
 }
 
-void exec_opt::setMax(int value)
-{
+void exec_opt::setMax(int value) {
     boxslist.resize(value);
 }
 
-int exec_opt::registerbox()
-{
+int exec_opt::registerbox() {
     if (!hasID)
-        for(int i = 0; i < MaxWorker; i++)
-        {
-            if(!boxslist[i])
-            {
+        for (int i = 0; i < MaxWorker; i++) {
+            if (!boxslist[i]) {
                 boxslist[i] = true;
                 this->id = i;
                 hasID = true;
@@ -228,10 +198,8 @@ int exec_opt::registerbox()
     return this->id;
 }
 
-void exec_opt::releasebox()
-{
-    if(hasID)
-    {
+void exec_opt::releasebox() {
+    if (hasID) {
         mainlg.log("ReleaseBoxID: " + to_string(id), LVD2);
         boxslist[id] = false;
         id = -1;
@@ -239,8 +207,7 @@ void exec_opt::releasebox()
     }
 }
 
-meta::meta()
-{
+meta::meta() {
     cg_mem = 0;
     csw_forced = 0;
     csw_voluntary = 0;
@@ -254,23 +221,20 @@ meta::meta()
     status = "";
 }
 
-meta::meta (string metafile)
-{
+meta::meta (string metafile): meta() {
     ifstream mf(metafile);
-    if(mf.fail())
+    if (mf.fail())
         throw ifstream::failure(strerror(errno));
     map<string, string> m;
     string buff;
-    while(getline(mf, buff))
-    {
+    while (getline(mf, buff)) {
         stringstream ss(buff);
         string key, data;
         getline(ss, key, ':');
         getline(ss, data, ':');
         m[key] = data;
     }
-    try
-    {
+    try {
         cg_mem = tryParsell(m["cg-mem"]);
         csw_forced = tryParsell(m["csw-forced"]);
         csw_voluntary = tryParsell(m["csw-voluntary"]);
@@ -282,9 +246,7 @@ meta::meta (string metafile)
         isKilled = tryParse(m["killed"]);
         message = m["message"];
         status = m["status"];
-    }
-    catch(exception ex)
-    {
+    } catch (exception ex) {
         cerr << ex.what() << endl;
         cerr << "Bad META file format" <<endl;
     }

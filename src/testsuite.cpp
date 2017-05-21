@@ -5,13 +5,12 @@ std::map<std::string, language> langs;
 exec_opt execset;
 exec_opt compset;
 
-void loadLangs(std::string confpath)
-{
+void loadLangs(std::string confpath) {
     logger lg("LangLoader");
     try {
         config conf(confpath);
         vector<string> list = conf.getSections();
-        for_each(list.begin(), list.end(), [&](string &name) throw(out_of_range){
+        for_each(list.begin(), list.end(), [&](string &name) throw(out_of_range) {
             language l;
             config_section lconf = conf[name];
             l.name = lconf.getName();

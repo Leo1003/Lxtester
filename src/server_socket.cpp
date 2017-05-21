@@ -2,8 +2,7 @@
 using namespace std;
 using namespace sio;
 
-ServerSocket::ServerSocket(string host, short port, string token) : lg(logger("Socket"))
-{
+ServerSocket::ServerSocket(string host, short port, string token) : lg(logger("Socket")) {
     stringstream ss;
     ss<<"wss://"<<host<<":"<<port;
     this->addr = ss.str();
@@ -19,22 +18,20 @@ ServerSocket::ServerSocket(string host, short port, string token) : lg(logger("S
     cli.set_close_listener(bind(&ServerSocket::on_closed, this, placeholders::_1));
 }
 
-ServerSocket::~ServerSocket()
-{
+ServerSocket::~ServerSocket() {
     disconnect();
 }
 
-void ServerSocket::connect()
-{
-    if(cli.opened())
+void ServerSocket::connect() {
+    if (cli.opened())
         return;
     _connect();
     ULOCK
     resetmt();
-    if(!unlocked)
+    if (!unlocked)
         _cv.wait(_ul);
     _ul.unlock();
-    if(!cli.opened())
+    if (!cli.opened())
         return;
     stat = Connected;
     s = cli.socket("lxtester");
@@ -43,57 +40,48 @@ void ServerSocket::connect()
     s->on("Cancel", bind(&ServerSocket::_cancel, this, placeholders::_1));
 }
 
-void ServerSocket::_connect()
-{
+void ServerSocket::_connect() {
     map<string,string> query;
     query["passtoken"] = token;
     cli.connect(addr, map<string,string>(), query);
 }
 
-void ServerSocket::disconnect()
-{
-    if(!cli.opened())
+void ServerSocket::disconnect() {
+    if (!cli.opened())
         return;
     ULOCK
     lg.log("Disconnecting from server...", LVIN);
     cli.close();
     resetmt();
-    if(!unlocked)
+    if (!unlocked)
         _cv.wait(_ul);
     _ul.unlock();
 }
 
-void ServerSocket::suspend()
-{
+void ServerSocket::suspend() {
     ULOCK
     s->emit("Suspend");
 }
 
-void ServerSocket::resume()
-{
+void ServerSocket::resume() {
     ULOCK
     s->emit("Resume");
 }
 
-ConnectionStatus ServerSocket::getStatus() const
-{
-    if(stat == Connected)
-    {
-        if(cli.opened())
+ConnectionStatus ServerSocket::getStatus() const {
+    if (stat == Connected) {
+        if (cli.opened())
             return Connected;
         else
             return NotConnected;
-    }
-    else
+    } else
         return stat;
 }
 
-Job ServerSocket::getJob()
-{
+Job ServerSocket::getJob() {
     ULOCK
     Job j;
-    if(jobque.empty())
-    {
+    if (jobque.empty()) {
         j.type = None;
         return j;
     }
@@ -102,13 +90,11 @@ Job ServerSocket::getJob()
     return j;
 }
 
-size_t ServerSocket::countJob() const
-{
+size_t ServerSocket::countJob() const {
     return jobque.size();
 }
 
-void ServerSocket::sendResult(const submission& sub)
-{
+void ServerSocket::sendResult(const submission& sub) {
     ULOCK
     lg.log("Creating object message", LVD2);
     shared_ptr<object_message> mess = static_pointer_cast<object_message>(object_message::create());
@@ -129,14 +115,11 @@ void ServerSocket::sendResult(const submission& sub)
     lg.log("Emitted.", LVD2);
 }
 
-
-inline void ServerSocket::resetmt()
-{
+inline void ServerSocket::resetmt() {
     unlocked = false;
 }
 
-void ServerSocket::on_connected()
-{
+void ServerSocket::on_connected() {
     ULOCK
     unlocked = true;
     stat = Connected;
@@ -144,8 +127,7 @@ void ServerSocket::on_connected()
     _cv.notify_all();
 }
 
-void ServerSocket::on_failed()
-{
+void ServerSocket::on_failed() {
     lg.log("on_failed", LVD2);
     ULOCK
     stat = Failed;
@@ -153,8 +135,7 @@ void ServerSocket::on_failed()
     _cv.notify_all();
 }
 
-void ServerSocket::on_error(const sio::message::ptr& message)
-{
+void ServerSocket::on_error(const sio::message::ptr& message) {
     lg.log("on_error", LVD2);
     ULOCK
     unlocked = true;
@@ -164,16 +145,12 @@ void ServerSocket::on_error(const sio::message::ptr& message)
     _cv.notify_all();
 }
 
-void ServerSocket::on_closed(client::close_reason const& reason)
-{
+void ServerSocket::on_closed(client::close_reason const& reason) {
     ULOCK
-    if(reason != client::close_reason_normal)
-    {
+    if (reason != client::close_reason_normal) {
         stat = Failed;
         lg.log("Abnormal Disconnected.", LVWA);
-    }
-    else
-    {
+    } else {
         stat = Disconnected;
         lg.log("Disconnected.", LVIN);
     }
@@ -181,11 +158,9 @@ void ServerSocket::on_closed(client::close_reason const& reason)
     _cv.notify_all();
 }
 
-void ServerSocket::_job(sio::event& event)
-{
+void ServerSocket::_job(sio::event& event) {
     ULOCK
-    try
-    {
+    try {
         map<string, message::ptr> msg = event.get_message()->get_map();
         int id = msg.at("id")->get_int();
         string l = msg.at("language")->get_string();
@@ -201,37 +176,27 @@ void ServerSocket::_job(sio::event& event)
         j.submissionid = sub.getId();
         j.sub = sub;
         jobque.push(j);
-    }
-    catch(out_of_range ex)
-    {
+    } catch (out_of_range ex) {
         lg.log("Server sent a bad submission format!", LVWA);
         lg.log(ex.what());
-    }
-    catch(exception ex)
-    {
+    } catch(exception ex) {
         lg.log("Failed to receive job", LVFA);
         lg.log(ex.what());
     }
 }
 
-void ServerSocket::_cancel(sio::event& event)
-{
+void ServerSocket::_cancel(sio::event& event) {
     ULOCK
-    try
-    {
+    try {
         map<string, message::ptr> msg = event.get_message()->get_map();
         Job j;
         j.type = Cancel;
         j.submissionid = msg.at("id")->get_int();
         jobque.push(j);
-    }
-    catch(out_of_range ex)
-    {
+    } catch (out_of_range ex) {
         lg.log("Server sent a bad request format!", LVWA);
         lg.log(ex.what());
-    }
-    catch(exception ex)
-    {
+    } catch (exception ex) {
         lg.log("Failed to receive job", LVFA);
         lg.log(ex.what());
     }

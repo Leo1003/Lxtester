@@ -6,17 +6,14 @@ ServerSocket *s;
 bool sigchild = false;
 logger mainlg("MainProc");
 
-void enterDaemon()
-{
+void enterDaemon() {
     umask(0022);
-    if (chdir(WorkingDir.c_str()) == -1)
-    {
+    if (chdir(WorkingDir.c_str()) == -1) {
         mainlg.log("Failed to chdir", LVFA);
         mainlg.log(strerror(errno));
         exit(1);
     }
-    if (DaemonMode)
-    {
+    if (DaemonMode) {
         for (int i = getdtablesize(); i >= 0; --i)
             close(i);
         if (open("/dev/null", O_RDONLY) == -1 || /* open stdin */
@@ -41,35 +38,29 @@ void enterDaemon()
     mainlg.log("Daemon PID: " + to_string(getpid()), LVIN);
     mainlg.log("Chdir to: " + string(getcwd(NULL, 0)), LVDE);
     int lfp = open(LOCKFile.c_str(), O_RDWR|O_CREAT|O_TRUNC, 0640);
-	if (lfp == -1)
-    {
+	if (lfp == -1) {
         mainlg.log("Failed to open lock file.", LVFA);
         exit(2);
     }
-	if (lockf(lfp, F_TLOCK, 0) < 0)
-    {
+	if (lockf(lfp, F_TLOCK, 0) < 0) {
         mainlg.log("Can't lock: " + LOCKFile , LVFA);
         mainlg.log("Maybe another process is running.");
         exit(2);
     }
     ofstream pidf;
     pidf.open(PIDFile);
-    if (!pidf)
-    {
+    if (!pidf) {
         mainlg.log("Fail to write pid file.", LVFA);
         exit(2);
     }
     pidf << getpid() << endl;
     pidf.close();
-    if (!isExec(IsoBinFile))
-    {
+    if (!isExec(IsoBinFile)) {
         mainlg.log("Fail to find isolate binary: " + IsoBinFile, LVFA);
         exit(1);
     }
-    if (!isDir("./meta"))
-    {
-        if(mkdir("./meta", 0755) == -1)
-        {
+    if (!isDir("./meta")) {
+        if (mkdir("./meta", 0755) == -1) {
             mainlg.log("Failed to mkdir: meta", LVFA);
             mainlg.log(strerror(errno));
             exit(1);
@@ -87,14 +78,11 @@ void enterDaemon()
     signal(SIGUSR1, signal_handler);
     signal(SIGCHLD, signal_handler);
 
-    try
-    {
+    try {
         loadLangs(LangFile);
         loadSandboxOption(OptionFile);
         exec_opt::setMax(MaxWorker);
-    }
-    catch (exception ex)
-    {
+    } catch (exception ex) {
         mainlg.log("Failed to load config.", LVFA);
         mainlg.log(ex.what());
         mainlg.log("Abort!", LVFA);
@@ -103,17 +91,14 @@ void enterDaemon()
     maind();
 }
 
-void maind()
-{
+void maind() {
     mainlg.log("Daemon Started", LVIN);
 	s = new ServerSocket(ServerAddr, ServerPort, ServerToken);
     s->connect();
-    while (!stopping)
-    {
+    while (!stopping) {
         if (sigchild)
             child_handler();
-        switch (s->getStatus())
-        {
+        switch (s->getStatus()) {
             case NotConnected:
             case Failed:
             case Disconnected:
@@ -186,13 +171,11 @@ void maind()
     exit(0);
 }
 
-void reconnect()
-{
+void reconnect() {
     mainlg.log("Failed to connect to server.", LVER);
     mainlg.log("Retry in 30 seconds...", LVIN);
     int time = 30;
-    while (time-- && !reset)
-    {
+    while (time-- && !reset) {
         if (stopping)
             return;
         sleep(1);
@@ -202,10 +185,8 @@ void reconnect()
     reset = false;
 }
 
-void signal_handler(int sig)
-{
-    switch (sig)
-    {
+void signal_handler(int sig) {
+    switch (sig) {
         case SIGUSR1:
             reset = true;
             break;
@@ -224,26 +205,20 @@ void signal_handler(int sig)
     }
 }
 
-void child_handler()
-{
+void child_handler() {
     int chldsta;
     pid_t chldpid;
-    while (chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0)
-    {
+    while (chldpid = waitpid(-1, &chldsta, WNOHANG), chldpid > 0) {
         mainlg.log("Child process terminated, PID: " + to_string(chldpid), LVDE);
-        try
-        {
+        try {
             submission sub = pidmap.at(chldpid);
             logger lg("Worker" + to_string(sub.getOption().getId()));
-            if (WIFEXITED(chldsta))
-            {
-                try
-                {
+            if (WIFEXITED(chldsta)) {
+                try {
                     RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
                     meta mf;
                     result res("Fatal error occurred when execute submission");
-                    switch (resty)
-                    {
+                    switch (resty) {
                         case TYPE_COMPILATION:
                         case TYPE_EXECUTION:
                             mf = meta(sub.getOption().metafile);
@@ -252,16 +227,12 @@ void child_handler()
                             break;
                     }
                     sub.setResult(res);
-                }
-                catch (ifstream::failure ex)
-                {
+                } catch (ifstream::failure ex) {
                     lg.log("Failed to load meta file: " + sub.getOption().metafile, LVER);
                     result res("Failed to load meta file");
                     sub.setResult(res);
                 }
-            }
-            else if (WIFSIGNALED(chldsta))
-            {
+            } else if (WIFSIGNALED(chldsta)) {
                 string sigstr(strsignal(WTERMSIG(chldsta)));
                 result res("Workflow had been killed by: " + sigstr);
                 sub.setResult(res);
@@ -275,9 +246,7 @@ void child_handler()
             s->sendResult(sub);
             lg.log("Successfully sent result, ID: " + to_string(sub.getId()), LVIN);
             pidmap.erase(pidmap.find(chldpid));
-        }
-        catch (out_of_range ex)
-        {
+        } catch (out_of_range ex) {
             mainlg.log("An unknown child process returned, PID: " + to_string(chldpid), LVER);
             continue;
         }
@@ -285,13 +254,11 @@ void child_handler()
     sigchild = false;
 }
 
-pid_t testWorkFlow(submission& sub)
-{
+pid_t testWorkFlow(submission& sub) {
     pid_t pid = fork();
     if (pid > 0)
         pidmap[pid] = sub;
-    else if (pid == 0)
-    {
+    else if (pid == 0) {
         //set child environment
         mainlg = logger("Worker" + to_string(sub.getOption().getId()));
         signal(SIGCHLD, SIG_DFL);
@@ -299,34 +266,25 @@ pid_t testWorkFlow(submission& sub)
         signal(SIGINT, SIG_DFL);
         signal(SIGTERM, SIG_DFL);
 
-        try
-        {
+        try {
             //create sandbox
-
-            if (sub.setup())
-            {
+            if (sub.setup()) {
                 mainlg.log("Setup Failed, ID: " + to_string(sub.getId()), LVWA);
                 exit(2);
             }
-            if (sub.compile())
-            {
+            if (sub.compile()) {
                 mainlg.log("Compile Failed, ID: " + to_string(sub.getId()), LVWA);
                 exit(1);
-            }
-            else
+            } else
                 sub.execute();
             mainlg.log("Submission Completed, ID: " + to_string(sub.getId()), LVIN);
-        }
-        catch (exception ex)
-        {
+        } catch (exception ex) {
             mainlg.log("Failed when execute submission.", LVER);
             mainlg.log(ex.what());
             exit(2);
         }
         exit(0);
-    }
-    else
-    {
+    } else {
         mainlg.log("Unable to fork.", LVFA);
         mainlg.log(strerror(errno));
         return -1;
@@ -334,24 +292,20 @@ pid_t testWorkFlow(submission& sub)
     return pid;
 }
 
-bool DetectDaemon()
-{
+bool DetectDaemon() {
     logger lg("DetectDaemon");
     int lfp = open(LOCKFile.c_str(), O_RDWR, 0640);
 	if (lfp < 0) return 0;
-    if (lockf(lfp, F_TEST, 0) < 0)
-    {
+    if (lockf(lfp, F_TEST, 0) < 0) {
         daerunning = true;
         ifstream pidf(PIDFile);
-        if(!pidf)
-        {
+        if (!pidf) {
             lg.log("Fail to read pid file.", LVFA);
             exit(1);
         }
         pidf >> daepid;
         pidf.close();
-    }
-    else
+    } else
         daerunning = false;
     close(lfp);
     return daerunning;

@@ -28,8 +28,7 @@ const struct option longopts[] = {
     {"stop",        no_argument,        NULL,   's'},
     {NULL,          0,                  NULL,   0}
 };
-enum Command
-{
+enum Command {
     DAE_DEFAULT = 0,
     DAE_START,
     DAE_STOP,
@@ -39,17 +38,14 @@ enum Command
     DAE_KILL
 };
 
-int main(int argc,char* argv[])
-{
+int main(int argc,char* argv[]) {
     /*** Parse Arguments ***/
     logger lg("Command");
     loglevel loglv;
     int opt;
     Command ty = DAE_DEFAULT;
-    while ((opt = getopt_long(argc, argv, optstring, longopts, NULL)) != -1)
-    {
-        switch (opt)
-        {
+    while ((opt = getopt_long(argc, argv, optstring, longopts, NULL)) != -1) {
+        switch (opt) {
             case 'd':
                 if (ty) usage(true);
                 ty = DAE_START;
@@ -84,8 +80,7 @@ int main(int argc,char* argv[])
                     loglv = tryParseLevel(optarg);
                 if (loglv == LVUNDEF)
                     usage(true);
-                else
-                {
+                else {
                     arglv = true;
                     logger::setGlobalLevel(loglv);
                 }
@@ -100,8 +95,7 @@ int main(int argc,char* argv[])
         }
     }
 
-    if (geteuid())
-    {
+    if (geteuid()) {
         lg.log("Please run lxtester as root!", LVFA);
         exit(2);
     }
@@ -109,25 +103,19 @@ int main(int argc,char* argv[])
     ConfigLoader();
     DetectDaemon();
 
-    if ((ty == DAE_DEFAULT || ty == DAE_START))
-    {
-        if (daerunning)
-        {
+    if ((ty == DAE_DEFAULT || ty == DAE_START)) {
+        if (daerunning) {
             lg.log("There is another process running.", LVER);
             exit(1);
         }
-    }
-    else
-    {
-        if (!daerunning)
-        {
+    } else {
+        if (!daerunning) {
             lg.log("There is no process running.", LVER);
             exit(1);
         }
     }
 
-    switch (ty)
-    {
+    switch (ty) {
         case DAE_START:
         case DAE_DEFAULT:
             if (DaemonMode)
@@ -138,9 +126,7 @@ int main(int argc,char* argv[])
             kill(daepid, SIGTERM);
             lg.log("Stopping...", LVIN);
             while (DetectDaemon())
-            {
                 sleep(1);
-            }
             lg.log("Stopped.", LVIN);
             break;
         case DAE_RELOAD:
@@ -151,9 +137,7 @@ int main(int argc,char* argv[])
         case DAE_RESTART:
             kill(daepid, SIGTERM);
             while (DetectDaemon())
-            {
                 sleep(1);
-            }
             if (DaemonMode)
                 daemon(1, 0);
             enterDaemon();
@@ -165,8 +149,7 @@ int main(int argc,char* argv[])
     }
 }
 
-void usage(bool wa)
-{
+void usage(bool wa) {
     printf("Usage: lxtester [option]\n");
     printf("\n");
     printf("Options:\n");
@@ -182,22 +165,17 @@ void usage(bool wa)
     else exit(0);
 }
 
-void ConfigLoader()
-{
+void ConfigLoader() {
     logger lg("ConfigLoader");
     string confpath = getConfDir() + "/lxtester.conf";
-    if (!isFile(confpath))
-    {
+    if (!isFile(confpath)) {
         lg.log("Can't open config file.", LVFA);
         lg.log(strerror(errno));
         exit(1);
     }
-    try
-    {
+    try {
         mainconf = config(confpath);
-    }
-    catch(exception ex)
-    {
+    } catch (exception ex) {
         lg.log("Failed to load main config.", LVFA);
         lg.log(ex.what());
         exit(1);

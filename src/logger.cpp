@@ -3,39 +3,34 @@ using namespace std;
 
 loglevel logger::globalset = LVIN;
 
-logger::logger(string name)
-{
+logger::logger(string name) {
     lastlv = LVNU;
     logname = name;
 }
 
-void logger::log(string mess, loglevel loglv)
-{
-    if(loglv < globalset)
+void logger::log(string mess, loglevel loglv) {
+    if (loglv < globalset)
         return;
-    if(loglv == LVNU && lastlv < globalset)
+    if (loglv == LVNU && lastlv < globalset)
         return;
-    if(loglv != LVNU)
+    if (loglv != LVNU)
         lastlv = loglv;
     string lvmes = to_string(loglv);
     stringstream ident;
-    if(globalset == LVD2)
-    {
+    if (globalset == LVD2) {
         ident << left << setw(12) << logname << "-> ";
     }
     string buf;
     stringstream ss(mess);
     stringstream errbuf;
-    while(getline(ss, buf)) //Avoid split by other process
+    while (getline(ss, buf)) //Avoid split by other process
         errbuf << ident.str() << lvmes << " " << buf << "\n";
     cerr << errbuf.str();
     cerr.flush();
 }
 
-string logger::to_string(loglevel lv)
-{
-    switch(lv)
-    {
+string logger::to_string(loglevel lv) {
+    switch (lv) {
         case LVFA: return "[FATAL]";
         case LVER: return "[ERROR]";
         case LVWA: return "[WARN] ";
@@ -47,12 +42,10 @@ string logger::to_string(loglevel lv)
     }
 }
 
-loglevel logger::getGlobalLevel()
-{
+loglevel logger::getGlobalLevel() {
     return globalset;
 }
 
-void logger::setGlobalLevel(loglevel lv)
-{
+void logger::setGlobalLevel(loglevel lv) {
     globalset = lv;
 }

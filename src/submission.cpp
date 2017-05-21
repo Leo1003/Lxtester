@@ -8,46 +8,37 @@ using boost::format;
  * -------------------------*/
 
 submission::submission(): res("Result not set") {}
-submission::submission(int id, string lang, string exe, string src): submission()
-{
+submission::submission(int id, string lang, string exe, string src): submission() {
     this->id = id;
     this->exename = exe;
     this->srcname = src;
     this->lang = getLang(lang);
-    
+
     execset.copySettings(opt);
     opt.std_in = "stdin.txt";
 }
 
-language submission::getLang(string lang)
-{
+language submission::getLang(string lang) {
     mainlg.log("Language: " + lang, LVD2);
     language l = langs.at(lang);
-    try
-    {
+    try {
         l.complier = formatCMD(l.complier);
         l.compargs = formatCMD(l.compargs);
         l.executer = formatCMD(l.executer);
         l.execargs = formatCMD(l.execargs);
-    }
-    catch (exception ex)
-    {
+    } catch (exception ex) {
         mainlg.log("Error when parsing language format string", LVER);
     }
     return l;
 }
 
-std::string submission::formatCMD(std::string fmstr)
-{
+std::string submission::formatCMD(std::string fmstr) {
     string str = fmstr;
-    try
-    {
+    try {
         format fm(fmstr);
         fm.exceptions(all_error_bits ^ (too_many_args_bit | too_few_args_bit));
         str = (fm % srcname % exename).str();
-    }
-    catch(exception ex)
-    {
+    } catch (exception ex) {
         mainlg.log("Error when parsing language format string: ", LVER);
         mainlg.log(fmstr);
         mainlg.log(ex.what());
@@ -55,53 +46,43 @@ std::string submission::formatCMD(std::string fmstr)
     return str;
 }
 
-string submission::getCode() const
-{
+string submission::getCode() const {
     return code;
 }
 
-void submission::setCode(string code)
-{
+void submission::setCode(string code) {
     this->code = code;
 }
 
-string submission::getStdin() const
-{
+string submission::getStdin() const {
     return stdin;
 }
 
-void submission::setStdin(string data)
-{
+void submission::setStdin(string data) {
     this->stdin = data;
 }
 
-int submission::getId() const
-{
+int submission::getId() const {
     return id;
 }
 
-exec_opt& submission::getOption()
-{
+exec_opt& submission::getOption() {
     return opt;
 }
 
-result submission::getResult() const
-{
+result submission::getResult() const {
     return res;
 }
 
-void submission::setResult(result res)
-{
+void submission::setResult(result res) {
     this->res = res;
 }
 
-void submission::extract(std::string file, std::string data)
-{
+void submission::extract(std::string file, std::string data) {
     string path = BoxDir + "/" + to_string(opt.getId()) + "/box/" + file;
     ofstream fs(path);
     mainlg.log("Source file: " + path, LVD2);
-    if(!fs)
-    {
+    if (!fs) {
         mainlg.log("Failed to opened file: " + path, LVER);
         mainlg.log("Box id: " + to_string(opt.getId()));
         throw ios_base::failure(strerror(errno));
@@ -111,19 +92,16 @@ void submission::extract(std::string file, std::string data)
     fs.close();
 }
 
-int submission::initBoxid()
-{
+int submission::initBoxid() {
     opt.registerbox();
     opt.metafile = "./meta/task" + to_string(opt.getId());
     return opt.getId();
 }
 
-int submission::setup()
-{
+int submission::setup() {
     if (initBoxid() == -1)
         return 1;
-    if (boxInit(opt))
-    {
+    if (boxInit(opt)) {
         mainlg.log("Unable to create box.", LVER);
         mainlg.log("Box id: " + to_string(opt.getId()));
         return 2;
@@ -134,8 +112,7 @@ int submission::setup()
     return 0;
 }
 
-int submission::compile()
-{
+int submission::compile() {
     if (!lang.needComplie)
         return 0;
 
@@ -146,22 +123,18 @@ int submission::compile()
     return boxExec(lang.complier + " " + lang.compargs, compile_opt, false);
 }
 
-int submission::execute()
-{
+int submission::execute() {
     return boxExec(lang.executer + " " + lang.execargs, opt);
 }
 
-int submission::clean()
-{
-    if (boxDel(opt))
-    {
+int submission::clean() {
+    if (boxDel(opt)) {
         mainlg.log("Unable to remove box.", LVER);
         mainlg.log("Box id: " + to_string(opt.getId()));
     }
     mainlg.log("Box id: " + to_string(opt.getId()) + " removed.", LVDE);
     opt.releasebox();
-    if (unlink(opt.metafile.c_str()))
-    {
+    if (unlink(opt.metafile.c_str())) {
         mainlg.log("Unable to delete meta file.", LVWA);
         mainlg.log(strerror(errno));
     }
@@ -172,8 +145,7 @@ int submission::clean()
  * struct result
  * -------------------------*/
 
-result::result(string error)
-{
+result::result(string error) {
     time = -1;
     mem = -1;
     exitcode = 0;
@@ -184,15 +156,13 @@ result::result(string error)
     type = TYPE_FAILED;
 }
 
-result::result (int boxid, meta metas)
-{
+result::result (int boxid, meta metas) {
     time = metas.time_wall;
     mem = metas.max_rss;
     exitcode = metas.exitcode;
     signal = metas.exitsig;
     isKilled = metas.isKilled;
-    try
-    {
+    try {
         ifstream outf(BoxDir + "/" + to_string(boxid) + "/box/stdout.log");
         if(outf.fail())
             throw ifstream::failure(strerror(errno));
@@ -200,14 +170,11 @@ result::result (int boxid, meta metas)
         while(getline(outf, s))
             std_out += s + "\n";
         outf.close();
-    }
-    catch(exception ex)
-    {
+    } catch (exception ex) {
         mainlg.log("Fail to open output", LVER);
         mainlg.log(ex.what());
     }
-    try
-    {
+    try {
         ifstream errf(BoxDir + "/" + to_string(boxid) + "/box/stderr.log");
         if(errf.fail())
             throw ifstream::failure(strerror(errno));
@@ -215,11 +182,8 @@ result::result (int boxid, meta metas)
         while(getline(errf, s))
             std_err += s + "\n";
         errf.close();
-    }
-    catch(exception ex)
-    {
+    } catch (exception ex) {
         mainlg.log("Fail to open stderr", LVER);
         mainlg.log(ex.what());
     }
 }
-
