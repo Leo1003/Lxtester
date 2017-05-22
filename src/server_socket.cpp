@@ -94,24 +94,35 @@ size_t ServerSocket::countJob() const {
     return jobque.size();
 }
 
+shared_ptr<message> ServerSocket::generateMessage(const int id, const result r)
+{
+    lg.log("Creating object message", LVD2);
+    shared_ptr<object_message> m = static_pointer_cast<object_message>(object_message::create());
+    m->insert("id", int_message::create(id));
+    m->insert("type", int_message::create(r.type));
+    m->insert("time", int_message::create(r.time));
+    m->insert("memory", int_message::create(r.mem));
+    m->insert("exitcode", int_message::create(r.exitcode));
+    m->insert("signal", int_message::create(r.signal));
+    m->insert("killed", bool_message::create(r.isKilled));
+    m->insert("output", string_message::create(r.std_out));
+    m->insert("error", string_message::create(r.std_err));
+    lg.log("Inserted result message", LVD2);
+    return static_pointer_cast<message>(m);
+}
+
 void ServerSocket::sendResult(const submission& sub) {
     ULOCK
-    lg.log("Creating object message", LVD2);
-    shared_ptr<object_message> mess = static_pointer_cast<object_message>(object_message::create());
-    lg.log("Converted object message", LVD2);
-    mess->insert("id", int_message::create(sub.getId()));
-    result re = sub.getResult();
-    mess->insert("type", int_message::create(re.type));
-    mess->insert("time", int_message::create(re.time));
-    mess->insert("memory", int_message::create(re.mem));
-    mess->insert("exitcode", int_message::create(re.exitcode));
-    mess->insert("signal", int_message::create(re.signal));
-    mess->insert("killed", bool_message::create(re.isKilled));
-    mess->insert("output", string_message::create(re.std_out));
-    mess->insert("error", string_message::create(re.std_err));
-    lg.log("Inserted result message", LVD2);
     lg.log("Emitting...", LVD2);
-    s->emit("Result", static_pointer_cast<message>(mess));
+    s->emit("Result", generateMessage(sub.getId(), sub.getResult()));
+    lg.log("Emitted.", LVD2);
+}
+
+void ServerSocket::sendFailed(int id, std::string msg)
+{
+    result r(msg);
+    lg.log("Emitting...", LVD2);
+    s->emit("Result", generateMessage(id, r));
     lg.log("Emitted.", LVD2);
 }
 
@@ -160,8 +171,9 @@ void ServerSocket::on_closed(client::close_reason const& reason) {
 
 void ServerSocket::_job(sio::event& event) {
     ULOCK
+    map<string, message::ptr> msg;
     try {
-        map<string, message::ptr> msg = event.get_message()->get_map();
+        msg = event.get_message()->get_map();
         int id = msg.at("id")->get_int();
         string l = msg.at("language")->get_string();
         string exefile = msg.at("exefile")->get_string();
@@ -178,8 +190,9 @@ void ServerSocket::_job(sio::event& event) {
         jobque.push(j);
     } catch (out_of_range ex) {
         lg.log("Server sent a bad submission format!", LVWA);
-        lg.log(ex.what());
-    } catch(exception ex) {
+    } catch (unsupport_language ex) {
+        sendFailed(msg.at("id")->get_int(), "Unsupported language");
+    } catch (exception ex) {
         lg.log("Failed to receive job", LVFA);
         lg.log(ex.what());
     }

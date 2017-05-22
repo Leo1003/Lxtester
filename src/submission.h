@@ -57,4 +57,6 @@ private:
     exec_opt opt;
 };
 
+class unsupport_language: public exception { };
+
 #endif // SUBMISSION_H

@@ -65,6 +65,8 @@ private:
     ConnectionStatus stat;
 
     inline void resetmt();
+    shared_ptr<sio::message> generateMessage(const int id, const result r);
+    void sendFailed(int id, std::string message);
     void _connect();
     //Listeners
     void on_connected();

@@ -1,7 +1,10 @@
 #include "submission.h"
 using namespace std;
-using namespace boost::io;
+//using namespace boost::io;
 using boost::format;
+using boost::io::all_error_bits;
+using boost::io::too_many_args_bit;
+using boost::io::too_few_args_bit;
 
 /*--------------------------
  * class submission
@@ -20,12 +23,16 @@ submission::submission(int id, string lang, string exe, string src): submission(
 
 language submission::getLang(string lang) {
     mainlg.log("Language: " + lang, LVD2);
-    language l = langs.at(lang);
+    language l;
     try {
+        l = langs.at(lang);
         l.complier = formatCMD(l.complier);
         l.compargs = formatCMD(l.compargs);
         l.executer = formatCMD(l.executer);
         l.execargs = formatCMD(l.execargs);
+    } catch (out_of_range ex) {
+        mainlg.log("Received a unsupport language.", LVWA);
+        throw unsupport_language();
     } catch (exception ex) {
         mainlg.log("Error when parsing language format string", LVER);
     }
