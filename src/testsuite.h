@@ -11,7 +11,8 @@
 
 struct language
 {
-    std::string name, complier, executer, compargs, execargs;
+    std::string name, complier, executer, compargs, execargs,
+        srcext;
     bool needComplie;
 };
 

@@ -13,9 +13,9 @@ using boost::io::too_few_args_bit;
 submission::submission(): res("Result not set") {}
 submission::submission(int id, string lang, string exe, string src): submission() {
     this->id = id;
+    this->lang = getLang(lang);
     this->exename = exe;
     this->srcname = src;
-    this->lang = getLang(lang);
 
     execset.copySettings(opt);
     opt.std_in = "stdin.txt";
@@ -114,7 +114,7 @@ int submission::setup() {
         return 2;
     }
     mainlg.log("Box id: " + to_string(opt.getId()) + " created.", LVDE);
-    extract(srcname, this->code);
+    extract(srcname + "." + this->lang.srcext, this->code);
     extract(opt.std_in, this->stdin);
     return 0;
 }
