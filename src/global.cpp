@@ -6,6 +6,9 @@ int daepid = 0;
 bool stopping = false;
 bool stopping2 = false;
 
+exec_opt execset;
+exec_opt compset;
+
 bool DaemonMode = true;
 string PIDFile = "/tmp/lxtester.pid";
 string LOCKFile = "/tmp/lxtester.lock";

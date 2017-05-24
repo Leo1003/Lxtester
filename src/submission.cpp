@@ -1,4 +1,5 @@
 #include "submission.h"
+#include "global.h"
 using namespace std;
 //using namespace boost::io;
 using boost::format;
@@ -127,11 +128,11 @@ int submission::compile() {
     compset.copySettings(compile_opt);
     compile_opt.metafile = opt.metafile;
 
-    return boxExec(lang.complier + " " + lang.compargs, compile_opt, false);
+    return boxExec(lang.complier + " " + lang.compargs, compile_opt, lang, false);
 }
 
 int submission::execute() {
-    return boxExec(lang.executer + " " + lang.execargs, opt);
+    return boxExec(lang.executer + " " + lang.execargs, opt, lang);
 }
 
 int submission::clean() {

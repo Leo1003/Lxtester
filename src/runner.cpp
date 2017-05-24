@@ -1,4 +1,5 @@
 #include "runner.h"
+#include "global.h"
 #define PB push_back
 #define BUF_SIZE 1024
 using namespace std;
@@ -21,7 +22,7 @@ int boxInit(const exec_opt& option) {
         return 255;
 }
 
-int boxExec(string cmd, const exec_opt& option, bool enableStdin) {
+int boxExec(string cmd, const exec_opt& option, const language& lang, bool enableStdin) {
     vector<string> args;
     args.PB(IsoBinFile);
     args.PB("--run");
@@ -40,6 +41,12 @@ int boxExec(string cmd, const exec_opt& option, bool enableStdin) {
     args.PB("--meta=" + option.metafile);
     args.PB("--env=PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin");
     args.PB("--env=HOME=/box");
+    for (auto env : lang.env) {
+        args.PB("--env=" + env);
+    }
+    for (auto rule : lang.dirrules) {
+        args.PB("--dir=" + rule);
+    }
     args.PB("--");
 
     //split cmd string into vector<string>

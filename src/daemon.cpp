@@ -1,4 +1,5 @@
 #include "daemon.h"
+#include "global.h"
 using namespace std;
 
 map<pid_t, submission> pidmap;

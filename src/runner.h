@@ -14,8 +14,8 @@
 #include <sys/wait.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
-#include "global.h"
 #include "logger.h"
+#include "testsuite.h"
 #include "utils.h"
 
 struct exec_opt
@@ -46,7 +46,7 @@ struct meta
 };
 
 int boxInit(const exec_opt& option);
-int boxExec(std::string cmd, const exec_opt& option, bool enableStdin = true);
+int boxExec(std::string cmd, const exec_opt& option, const language& lang, bool enableStdin = true);
 int boxDel(const exec_opt& option);
 
 int advFork(char** argp, pid_t& pid);

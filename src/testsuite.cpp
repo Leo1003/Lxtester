@@ -1,9 +1,8 @@
 #include "testsuite.h"
+#include "global.h"
 using namespace std;
 
 std::map<std::string, language> langs;
-exec_opt execset;
-exec_opt compset;
 
 void loadLangs(std::string confpath) {
     logger lg("LangLoader");
@@ -22,6 +21,20 @@ void loadLangs(std::string confpath) {
             l.executer = lconf.getString("Executer");
             l.execargs = lconf.getString("ExecuteArgs");
             l.srcext = lconf.getString("SourceExt");
+            if (lconf.isExist("Environment")) {
+                string envstr = lconf.getString("Environment");
+                string s;
+                while(s = delimstring(envstr, ','), s != "") {
+                    l.env.push_back(s);
+                }
+            }
+            if (lconf.isExist("MountRules")) {
+                string envstr = lconf.getString("MountRules");
+                string s;
+                while(s = delimstring(envstr, ','), s != "") {
+                    l.dirrules.push_back(s);
+                }
+            }
             langs[name] = l;
             lg.log("Found language: " + name, LVDE);
         });

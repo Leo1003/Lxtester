@@ -5,20 +5,17 @@
 #include <vector>
 #include "config.h"
 #include "logger.h"
-#include "global.h"
-#include "runner.h"
 #include "utils.h"
 
 struct language
 {
     std::string name, complier, executer, compargs, execargs,
         srcext;
+    std::vector<std::string> dirrules, env;
     bool needCompile;
 };
 
 extern std::map<std::string, language> langs;
-extern exec_opt execset;
-extern exec_opt compset;
 
 void loadLangs(std::string confpath);
 void loadSandboxOption(std::string confpath);

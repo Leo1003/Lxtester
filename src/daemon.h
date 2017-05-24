@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "config.h"
-#include "global.h"
 #include "server_socket.h"
 #include "submission.h"
 #include "utils.h"

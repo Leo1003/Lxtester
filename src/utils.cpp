@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "global.h"
 using namespace std;
 
 string getSelfPath() {
@@ -104,6 +105,17 @@ loglevel tryParseLevel(string str) {
         return LVD2;
     else
         return (loglevel)-1;
+}
+
+string delimstring(string& str, char delim)
+{
+    stringstream ss(str);
+    string ret;
+    getline(ss, ret, delim);
+    str = ss.str().substr(ret.size());
+    if (str.size() > 0)
+        str = str.substr(1);
+    return ret;
 }
 
 string trim(const string& str) {

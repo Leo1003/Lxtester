@@ -1,4 +1,5 @@
 #include "config.h"
+#include "global.h"
 using namespace std;
 
 /*--------------------------

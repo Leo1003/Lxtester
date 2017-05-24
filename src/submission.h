@@ -3,7 +3,6 @@
 #include <bitset>
 #include <string>
 #include <boost/format.hpp>
-#include "global.h"
 #include "logger.h"
 #include "utils.h"
 #include "runner.h"

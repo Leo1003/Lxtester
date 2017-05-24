@@ -2,11 +2,15 @@
 #define GLOBAL_H
 #include <string>
 #include "logger.h"
+#include "runner.h"
 using std::string;
 
 extern bool daerunning;
 extern int daepid;
 extern bool stopping, stopping2, reset;
+
+extern exec_opt execset;
+extern exec_opt compset;
 
 /*--------------------
  * config variables

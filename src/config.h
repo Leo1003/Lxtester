@@ -6,7 +6,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include "global.h"
 #include "logger.h"
 #include "utils.h"
 
