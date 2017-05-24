@@ -13,7 +13,7 @@ struct language
 {
     std::string name, complier, executer, compargs, execargs,
         srcext;
-    bool needComplie;
+    bool needCompile;
 };
 
 extern std::map<std::string, language> langs;

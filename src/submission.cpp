@@ -120,7 +120,7 @@ int submission::setup() {
 }
 
 int submission::compile() {
-    if (!lang.needComplie)
+    if (!lang.needCompile)
         return 0;
 
     exec_opt compile_opt = opt;

@@ -14,8 +14,8 @@ void loadLangs(std::string confpath) {
             language l;
             config_section lconf = conf[name];
             l.name = lconf.getName();
-            l.needComplie = lconf.getBool("needComplie");
-            if(l.needComplie) {
+            l.needCompile = lconf.getBool("needCompile");
+            if(l.needCompile) {
                 l.complier = lconf.getString("Compiler");
                 l.compargs = lconf.getString("CompileArgs");
             }
