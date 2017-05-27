@@ -21,6 +21,7 @@ string LogFile = "/tmp/lxtester.log";
 string LangFile = "languages.conf";
 string OptionFile = "options.conf";
 string IsoBinFile = "./isolate/isolate";
+string Protocol = "wss";
 string ServerAddr = "localhost";
-short ServerPort = 80;
+short ServerPort = 0;
 string ServerToken;

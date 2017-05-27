@@ -42,7 +42,7 @@ struct Job
 class ServerSocket
 {
 public:
-    ServerSocket(std::string host, short port, std::string token);
+    ServerSocket(std::string proco, std::string host, short port, std::string token);
     ~ServerSocket();
     ConnectionStatus getStatus() const;
     void connect();

@@ -2,9 +2,12 @@
 using namespace std;
 using namespace sio;
 
-ServerSocket::ServerSocket(string host, short port, string token) : lg(logger("Socket")) {
+ServerSocket::ServerSocket(string proco, string host, short port, string token) : lg(logger("Socket")) {
     stringstream ss;
-    ss<<"wss://"<<host<<":"<<port;
+    ss<<proco<<"://"<<host;
+    if (port) {
+        ss<<":"<<port;
+    }
     this->addr = ss.str();
     this->token = token;
     lg.log("Server address is: " + addr, LVIN);

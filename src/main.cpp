@@ -193,6 +193,7 @@ void ConfigLoader() {
     mainconf.trygetString(LangFile, "LanguageFile");
     mainconf.trygetString(OptionFile, "OptionFile");
     mainconf.trygetString(IsoBinFile, "IsolatePath");
+    mainconf.trygetString(Protocol, "Protocol");
     mainconf.trygetString(ServerAddr, "ServerAddress");
     if (mainconf.isExist("ServerPort"))
         ServerPort = mainconf.getInt("ServerPort");

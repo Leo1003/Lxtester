@@ -27,6 +27,7 @@ extern string LogFile;
 extern string LangFile;
 extern string OptionFile;
 extern string IsoBinFile;
+extern string Protocol;
 extern string ServerAddr;
 extern short ServerPort;
 extern string ServerToken;
