@@ -1,10 +1,12 @@
 #include "global.h"
 
-bool reset = false;
+bool refresh = false;
 bool daerunning = false;
 int daepid = 0;
 bool stopping = false;
 bool stopping2 = false;
+
+pid_t nowrunning = 0;
 
 exec_opt execset;
 exec_opt compset;

@@ -139,8 +139,9 @@ int submission::clean() {
     if (boxDel(opt)) {
         mainlg.log("Unable to remove box.", LVER);
         mainlg.log("Box id: " + to_string(opt.getId()));
+    } else {
+        mainlg.log("Box id: " + to_string(opt.getId()) + " removed.", LVDE);
     }
-    mainlg.log("Box id: " + to_string(opt.getId()) + " removed.", LVDE);
     opt.releasebox();
     if (unlink(opt.metafile.c_str())) {
         mainlg.log("Unable to delete meta file.", LVWA);

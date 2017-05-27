@@ -7,7 +7,8 @@ using std::string;
 
 extern bool daerunning;
 extern int daepid;
-extern bool stopping, stopping2, reset;
+extern pid_t nowrunning;
+extern bool stopping, stopping2, refresh;
 
 extern exec_opt execset;
 extern exec_opt compset;

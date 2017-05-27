@@ -109,7 +109,7 @@ void maind() {
                 mainlg.log("Receive error from server.", LVFA);
                 exit(1);
             case Connected:
-                reset = false;
+                refresh = false;
                 break;
         }
         Job j;
@@ -130,8 +130,9 @@ void maind() {
                 bool killed = false;
                 for (auto const &ele : pidmap) {
                     if (ele.second.getId() == j.submissionid) {
-                        if (!kill(ele.first, SIGTERM))
+                        if (!kill(ele.first, SIGUSR2))
                             killed = true;
+                        mainlg.log("Cancel signal sent to PID: " + to_string(ele.first), LVDE);
                         break;
                     }
                 }
@@ -141,7 +142,8 @@ void maind() {
                 sleep(1);
             }
         } else
-            sleep(1);
+            usleep(100 * 1000);
+            //sleep(1);
     }
     if (s->getStatus() == Connected)
         s->suspend();
@@ -149,7 +151,7 @@ void maind() {
     while (!stopping2 && pidmap.size()) {
         if (left != pidmap.size()) {
             left = pidmap.size();
-            mainlg.log("Waiting for Workers to exit: (" + to_string(left) + "/10)", LVIN);
+            mainlg.log("Waiting for Workers to exit: (" + to_string(left) + "/" + to_string(MaxWorker) + ")", LVIN);
         }
         child_handler();
         sleep(1);
@@ -176,20 +178,20 @@ void reconnect() {
     mainlg.log("Failed to connect to server.", LVER);
     mainlg.log("Retry in 30 seconds...", LVIN);
     int time = 30;
-    while (time-- && !reset) {
+    while (time-- && !refresh) {
         if (stopping)
             return;
         sleep(1);
     }
     mainlg.log("Reconnecting...", LVIN);
     s->connect();
-    reset = false;
+    refresh = false;
 }
 
 void signal_handler(int sig) {
     switch (sig) {
         case SIGUSR1:
-            reset = true;
+            refresh = true;
             break;
         case SIGINT:
             if (DaemonMode)
@@ -218,13 +220,19 @@ void child_handler() {
                 try {
                     RESULT_TYPE resty = (RESULT_TYPE)WEXITSTATUS(chldsta);
                     meta mf;
-                    result res("Fatal error occurred when execute submission");
+                    result res("");
                     switch (resty) {
                         case TYPE_COMPILATION:
                         case TYPE_EXECUTION:
                             mf = meta(sub.getOption().metafile);
                             res = result(sub.getOption().getId(), mf);
                             res.type = resty;
+                            break;
+                        case TYPE_CANCELED:
+                            res = result("Canceled by user");
+                            break;
+                        case TYPE_FAILED:
+                            res = result("Fatal error occurred when execute submission");
                             break;
                     }
                     sub.setResult(res);
@@ -235,7 +243,7 @@ void child_handler() {
                 }
             } else if (WIFSIGNALED(chldsta)) {
                 string sigstr(strsignal(WTERMSIG(chldsta)));
-                result res("Workflow had been killed by: " + sigstr);
+                result res("Worker had been killed by: " + sigstr);
                 sub.setResult(res);
                 lg.log("Return PID: " + to_string(chldpid) + " has failed.", LVER);
                 lg.log("Signal: " + sigstr);
@@ -257,40 +265,58 @@ void child_handler() {
 
 pid_t testWorkFlow(submission& sub) {
     pid_t pid = fork();
-    if (pid > 0)
+    if (pid > 0) {
         pidmap[pid] = sub;
-    else if (pid == 0) {
+        mainlg.log("Worker" + to_string(sub.getOption().getId()) + " PID: " + to_string(pid), LVDE);
+    } else if (pid == 0) {
         //set child environment
         mainlg = logger("Worker" + to_string(sub.getOption().getId()));
+        mainlg.log("Setuped logger", LVD2);
+        signal(SIGUSR2, worker_signal_handler);
+        signal(SIGINT, worker_signal_handler);
         signal(SIGCHLD, SIG_DFL);
         signal(SIGHUP, SIG_DFL);
-        signal(SIGINT, SIG_DFL);
         signal(SIGTERM, SIG_DFL);
+        mainlg.log("Setuped signal", LVD2);
 
         try {
             //create sandbox
             if (sub.setup()) {
                 mainlg.log("Setup Failed, ID: " + to_string(sub.getId()), LVWA);
-                exit(2);
+                exit(TYPE_FAILED);
             }
             if (sub.compile()) {
                 mainlg.log("Compile Failed, ID: " + to_string(sub.getId()), LVWA);
-                exit(1);
+                exit(TYPE_COMPILATION);
             } else
                 sub.execute();
             mainlg.log("Submission Completed, ID: " + to_string(sub.getId()), LVIN);
         } catch (exception ex) {
             mainlg.log("Failed when execute submission.", LVER);
             mainlg.log(ex.what());
-            exit(2);
+            exit(TYPE_FAILED);
         }
-        exit(0);
+        exit(TYPE_EXECUTION);
     } else {
         mainlg.log("Unable to fork.", LVFA);
         mainlg.log(strerror(errno));
         return -1;
     }
     return pid;
+}
+
+void worker_signal_handler(int sig)
+{
+    mainlg.log("worker_signal_handler", LVD2);
+    switch (sig) {
+        case SIGINT:
+        case SIGUSR2:
+            mainlg.log("Worker received cancel signal", LVDE);
+            if (nowrunning)
+                kill(nowrunning, SIGTERM);
+            exit(TYPE_CANCELED);
+            break;
+    }
 }
 
 bool DetectDaemon() {

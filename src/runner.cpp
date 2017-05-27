@@ -130,6 +130,7 @@ int advFork(char** argp, pid_t& pid) {
         mainlg.log("Failed to exec.", LVFA);
         exit(127);
     } else if (pid > 0) {
+        nowrunning = pid;
         mainlg.log("Child PID: " + to_string(pid), LVDE);
         //main process
         if (p) {
@@ -149,6 +150,7 @@ int advFork(char** argp, pid_t& pid) {
             mainlg.log("Advfork: Failed to wait child process", LVER);
             mainlg.log(strerror(errno));
         }
+        nowrunning = 0;
     } else {
         //failed
         mainlg.log("Advfork Failed.", LVER);

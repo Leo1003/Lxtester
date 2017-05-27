@@ -12,7 +12,8 @@ enum RESULT_TYPE
 {
     TYPE_EXECUTION = 0,
     TYPE_COMPILATION = 1,
-    TYPE_FAILED = 2
+    TYPE_CANCELED = 2,
+    TYPE_FAILED = 3
 };
 
 struct result
