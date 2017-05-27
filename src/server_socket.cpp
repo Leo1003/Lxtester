@@ -86,8 +86,12 @@ Job ServerSocket::getJob() {
         return j;
     }
     j = jobque.front();
-    jobque.pop();
+    jobque.pop_front();
     return j;
+}
+
+JobType ServerSocket::getJobType() const {
+    return (jobque.empty() ? None : jobque.front().type);
 }
 
 size_t ServerSocket::countJob() const {
@@ -187,7 +191,7 @@ void ServerSocket::_job(sio::event& event) {
         j.type = Submission;
         j.submissionid = sub.getId();
         j.sub = sub;
-        jobque.push(j);
+        jobque.push_back(j);
     } catch (out_of_range ex) {
         lg.log("Server sent a bad submission format!", LVWA);
     } catch (unsupport_language ex) {
@@ -205,7 +209,7 @@ void ServerSocket::_cancel(sio::event& event) {
         Job j;
         j.type = Cancel;
         j.submissionid = msg.at("id")->get_int();
-        jobque.push(j);
+        jobque.push_front(j);
     } catch (out_of_range ex) {
         lg.log("Server sent a bad request format!", LVWA);
         lg.log(ex.what());

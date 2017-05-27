@@ -17,7 +17,7 @@ void maind();
 void reconnect();
 void signal_handler(int);
 void child_handler();
-pid_t testWorkFlow(submission& sub);
+pid_t testWorker(submission& sub);
 void worker_signal_handler(int);
 bool DetectDaemon();
 

@@ -113,15 +113,27 @@ void maind() {
                 break;
         }
         Job j;
-        if (pidmap.size() < MaxWorker) {
+        bool shouldRecv = false;
+        switch (s->getJobType()) {
+            case None:
+                shouldRecv = false;
+                break;
+            case Submission:
+                shouldRecv = pidmap.size() < MaxWorker;
+                break;
+            case Cancel:
+                shouldRecv = true;
+                break;
+        }
+        if (shouldRecv) {
             j = s->getJob();
             if (j.type == Submission) {
                 mainlg.log("Received submission, ID : " + to_string(j.submissionid), LVIN);
                 j.sub.initBoxid();
-                if (testWorkFlow(j.sub) != -1)
-                    mainlg.log("Sent to workflow!", LVD2);
+                if (testWorker(j.sub) != -1)
+                    mainlg.log("Sent to worker!", LVD2);
                 else {
-                    result res("Workflow failed!");
+                    result res("Worker failed to start!");
                     j.sub.setResult(res);
                     s->sendResult(j.sub);
                 }
@@ -138,12 +150,9 @@ void maind() {
                 }
                 if (!killed)
                     mainlg.log("Cancel not found, ID : " + to_string(j.submissionid), LVIN);
-            } else {
-                sleep(1);
             }
         } else
             usleep(100 * 1000);
-            //sleep(1);
     }
     if (s->getStatus() == Connected)
         s->suspend();
@@ -263,7 +272,7 @@ void child_handler() {
     sigchild = false;
 }
 
-pid_t testWorkFlow(submission& sub) {
+pid_t testWorker(submission& sub) {
     pid_t pid = fork();
     if (pid > 0) {
         pidmap[pid] = sub;

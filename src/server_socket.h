@@ -3,7 +3,7 @@
 #include <condition_variable>
 #include <map>
 #include <mutex>
-#include <queue>
+#include <deque>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -50,6 +50,7 @@ public:
     void resume();
     void disconnect();
     Job getJob();
+    JobType getJobType() const;
     size_t countJob() const;
     void sendResult(const submission& sub);
 private:
@@ -60,7 +61,7 @@ private:
     bool unlocked;
     std::string addr;
     std::string token;
-    std::queue<Job> jobque;
+    std::deque<Job> jobque;
     logger lg;
     ConnectionStatus stat;
 
