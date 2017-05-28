@@ -42,7 +42,7 @@ struct Job
 class ServerSocket
 {
 public:
-    ServerSocket(std::string proco, std::string host, short port, std::string token);
+    ServerSocket(std::string proco, std::string host, short port, std::string token, std::string name);
     ~ServerSocket();
     ConnectionStatus getStatus() const;
     void connect();
@@ -61,6 +61,7 @@ private:
     bool unlocked;
     std::string addr;
     std::string token;
+    std::string lxtname;
     std::deque<Job> jobque;
     logger lg;
     ConnectionStatus stat;

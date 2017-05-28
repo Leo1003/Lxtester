@@ -2,7 +2,7 @@
 using namespace std;
 using namespace sio;
 
-ServerSocket::ServerSocket(string proco, string host, short port, string token) : lg(logger("Socket")) {
+ServerSocket::ServerSocket(string proco, string host, short port, string token, string name) : lg(logger("Socket")) {
     stringstream ss;
     ss<<proco<<"://"<<host;
     if (port) {
@@ -10,7 +10,9 @@ ServerSocket::ServerSocket(string proco, string host, short port, string token) 
     }
     this->addr = ss.str();
     this->token = token;
+    this->lxtname = name;
     lg.log("Server address is: " + addr, LVIN);
+    lg.log("Lxtester name is: " + name, LVIN);
     resetmt();
     stat = NotConnected;
     cli.set_reconnect_attempts(2);
@@ -41,6 +43,10 @@ void ServerSocket::connect() {
     s->on_error(bind(&ServerSocket::on_error, this, placeholders::_1));
     s->on("Job", bind(&ServerSocket::_job, this, placeholders::_1));
     s->on("Cancel", bind(&ServerSocket::_cancel, this, placeholders::_1));
+    shared_ptr<object_message> m = static_pointer_cast<object_message>(object_message::create());
+    m->insert("name", string_message::create(lxtname));
+    sleep(1);
+    s->emit("Name", static_pointer_cast<message>(m));
 }
 
 void ServerSocket::_connect() {

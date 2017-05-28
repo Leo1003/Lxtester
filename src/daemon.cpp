@@ -94,7 +94,7 @@ void enterDaemon() {
 
 void maind() {
     mainlg.log("Daemon Started", LVIN);
-	s = new ServerSocket(Protocol, ServerAddr, ServerPort, ServerToken);
+	s = new ServerSocket(Protocol, ServerAddr, ServerPort, ServerToken, LXTName);
     s->connect();
     while (!stopping) {
         if (sigchild)

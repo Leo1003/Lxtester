@@ -182,6 +182,7 @@ void ConfigLoader() {
     }
     if (!argdm)
         mainconf.trygetBool(DaemonMode, "DaemonMode");
+    mainconf.trygetString(LXTName, "Name");
     mainconf.trygetString(PIDFile, "PIDFile");
     mainconf.trygetString(LOCKFile, "LockFile");
     mainconf.trygetString(BoxDir, "SandboxDirectory");

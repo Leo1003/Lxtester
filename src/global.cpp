@@ -11,6 +11,7 @@ pid_t nowrunning = 0;
 exec_opt execset;
 exec_opt compset;
 
+string LXTName = "lxtester";
 bool DaemonMode = true;
 string PIDFile = "/tmp/lxtester.pid";
 string LOCKFile = "/tmp/lxtester.lock";

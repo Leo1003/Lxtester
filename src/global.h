@@ -17,6 +17,7 @@ extern exec_opt compset;
  * config variables
  * -------------------*/
 
+extern string LXTName;
 extern bool DaemonMode;
 extern string PIDFile;
 extern string LOCKFile;
