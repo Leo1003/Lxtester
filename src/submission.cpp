@@ -176,7 +176,7 @@ result::result (int boxid, meta metas) {
         if(outf.fail())
             throw ifstream::failure(strerror(errno));
         string s;
-        while(getline(outf, s))
+        while(getline(outf, s) && std_out.size() < 102400)
             std_out += s + "\n";
         outf.close();
     } catch (exception ex) {
@@ -188,7 +188,7 @@ result::result (int boxid, meta metas) {
         if(errf.fail())
             throw ifstream::failure(strerror(errno));
         string s;
-        while(getline(errf, s))
+        while(getline(errf, s) && std_err.size() < 102400)
             std_err += s + "\n";
         errf.close();
     } catch (exception ex) {
