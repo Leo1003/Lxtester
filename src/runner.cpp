@@ -164,6 +164,7 @@ vector<bool> exec_opt::boxslist;
 exec_opt::exec_opt() {
     id = -1;
     hasID = false;
+    outputLength = 102400;
     time = 1;
     mem = 1024;
     fsize = 1024;
@@ -181,6 +182,7 @@ int exec_opt::getId() const {
 }
 
 void exec_opt::copySettings(exec_opt &dest) const {
+    dest.outputLength = this->outputLength;
     dest.time = this->time;
     dest.mem = this->mem;
     dest.fsize = this->fsize;

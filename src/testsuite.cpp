@@ -9,7 +9,7 @@ void loadLangs(std::string confpath) {
     try {
         config conf(confpath);
         vector<string> list = conf.getSections();
-        for_each(list.begin(), list.end(), [&](string &name) throw(out_of_range) {
+        for_each(list.begin(), list.end(), [&](string &name) {
             language l;
             config_section lconf = conf[name];
             l.name = lconf.getName();
@@ -45,6 +45,7 @@ void loadLangs(std::string confpath) {
 }
 
 void extractOption(config_section conf, exec_opt &o) {
+    conf.trygetInt(o.outputLength, "OutputLength");
     conf.trygetInt(o.time, "Time");
     conf.trygetInt(o.mem, "Memory");
     conf.trygetInt(o.fsize, "FileSize");

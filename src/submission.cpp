@@ -171,12 +171,13 @@ result::result (int boxid, meta metas) {
     exitcode = metas.exitcode;
     signal = metas.exitsig;
     isKilled = metas.isKilled;
+    int outlimit = (type == TYPE_EXECUTION ? execset.outputLength : compset.outputLength);
     try {
         ifstream outf(BoxDir + "/" + to_string(boxid) + "/box/stdout.log");
         if(outf.fail())
             throw ifstream::failure(strerror(errno));
         string s;
-        while(getline(outf, s) && std_out.size() < 102400)
+        while(getline(outf, s) && (outlimit == -1 ? true : std_out.size() < outlimit))
             std_out += s + "\n";
         outf.close();
     } catch (exception ex) {
@@ -188,7 +189,7 @@ result::result (int boxid, meta metas) {
         if(errf.fail())
             throw ifstream::failure(strerror(errno));
         string s;
-        while(getline(errf, s) && std_err.size() < 102400)
+        while(getline(errf, s) && (outlimit == -1 ? true : std_err.size() < outlimit))
             std_err += s + "\n";
         errf.close();
     } catch (exception ex) {
